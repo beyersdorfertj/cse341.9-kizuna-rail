@@ -1,0 +1,10 @@
+if npx --no-install commitlint --edit "$1"; then
+	exit 0
+else
+	status=$?
+fi
+
+printf '\nCommit message must follow Conventional Commits:\n' >&2
+printf '  Format: <type>: <subject>\n' >&2
+printf '  Example: "test: fix the failing case" or "fix: correct wording"\n' >&2
+exit "$status"
