@@ -1,4 +1,5 @@
 //src/models/schedules.js.
+import { getDb } from "../db/connect.js";
 import schedule from "./schemas/schedules.js";
 
 export async function getSchedulesByTripId(tripId, month) {
@@ -9,9 +10,21 @@ export async function getSchedulesByTripId(tripId, month) {
       throw new RangeError("month must be an integer between 1 and 12");
     }
 
-    // Issues #28 and #29 depend on month filtering. The schedules data model
-    // has no operating-month field yet, so a valid month is accepted but not
-    // applied to the query until its data source is defined (see issue #27).
+    const trip = await getDb()
+      .collection("trips")
+      .findOne({ id: tripId }, { projection: { operatingMonths: 1 } });
+
+    if (!trip) {
+      return [];
+    }
+
+    if (!Array.isArray(trip.operatingMonths)) {
+      throw new Error(`Trip ${tripId} has no operatingMonths array`);
+    }
+
+    if (!trip.operatingMonths.includes(parsedMonth)) {
+      return [];
+    }
   }
 
   return schedule.find({ tripId }).lean();
