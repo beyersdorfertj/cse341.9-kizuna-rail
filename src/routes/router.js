@@ -23,7 +23,62 @@ router.get('/trains', trainsPage);
 router.get('/api/trains', trainsApi);
 
 // Trips API
+
+/**
+ * @openapi
+ * /api/trips:
+ *   get:
+ *     summary: Retrieve all trips
+ *     tags:
+ *       - Trips
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved all trips
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Trip'
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/api/trips', getAllTrips);
+
+/**
+ * @openapi
+ * /api/trips/{id}:
+ *   get:
+ *     summary: Retrieve a trip by ID
+ *     tags:
+ *       - Trips
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Unique trip ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Trip retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Trip'
+ *       '404':
+ *         description: Trip not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Trip not found
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/api/trips/:id', getTripById);
 
 // Rail trips pages
