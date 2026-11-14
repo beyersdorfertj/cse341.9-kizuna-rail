@@ -1,5 +1,9 @@
 # PR Review Workflow: Small, Stackable, Correctly Ordered
 
+## Trial status
+
+This is the proposed workflow for Issue #33, not yet a verified end-to-end setup. An active ruleset requiring `check-base` on all branches has rejected the initial feature-branch push with `GH013: Required status check "check-base" is expected`. The intended review and merge behavior below still needs practical verification, including ordinary follow-up pushes.
+
 ## The problem
 
 We want pull requests that are **small and easy to review**. Two things work against that:
@@ -54,7 +58,7 @@ jobs:
 
 What it does:
 
-- Runs on every PR event, including when a PR's **base branch changes**.
+- Runs on PR events `opened`, `edited`, `reopened` and `synchronize`, including base-branch changes through `edited`.
 - Checks the PR's base branch (`github.base_ref`).
   - Base **≠ `main`** → exits with an error → the check turns **red**.
   - Base **= `main`** → the step is skipped → the check is **green**.
@@ -81,15 +85,34 @@ Enable these rules:
   - [x] Dismiss stale pull request approvals when new commits are pushed *(optional)*
 - [x] **Require status checks to pass**
   - Add check: **`check-base`**
+  - Enable **Do not require status checks on creation**, if available, so a new feature branch can be pushed before its PR check exists. This exception applies only to branch creation; verify follow-up pushes separately.
   - [ ] **Do NOT** enable "Require branches to be up to date before merging" — it would invalidate a pre-approval after the parent merges and force a second review.
+- Leave **Restrict deletions** disabled so merged parent branches can be deleted.
 
 ### Order of setup
-1. Merge `enforce-base-main.yml` to `main`.
-2. Open one throwaway PR so `check-base` runs once and becomes selectable.
-3. Enable "Automatically delete head branches".
-4. Create the ruleset as above.
+1. Keep the new ruleset disabled during bootstrap. If it is already active and blocks the workflow branch's push, temporarily disable it.
+2. Push the workflow branch, open a PR and merge `enforce-base-main.yml` to `main`.
+3. Open one throwaway PR so `check-base` runs once and becomes selectable.
+4. Enable "Automatically delete head branches".
+5. Configure the ruleset as above, including the branch-creation exception, then activate it.
+6. Verify new branch creation, ordinary follow-up pushes, required approval, blocked merges to feature branches, and automatic retargeting after a parent merges. Do not treat the setup as complete if normal development pushes are blocked.
 
-## Resulting behavior
+### Troubleshooting: initial push rejected
+
+If GitHub rejects `git push -u origin <branch>` with:
+
+```text
+GH013: Repository rule violations found
+Required status check "check-base" is expected.
+```
+
+the ruleset requires a check before the remote branch exists. The PR-triggered workflow cannot run until the branch is pushed and a PR is opened, creating a bootstrap deadlock.
+
+Temporarily disable the new ruleset and follow the setup order above. `git pull` does not resolve this ruleset rejection. A successful `git push --dry-run` does not establish that the server will accept a real push.
+
+The branch-creation exception does not exempt later updates. If follow-up pushes are also rejected, the all-branches ruleset needs further design changes; do not assume that finishing bootstrap solves the entire workflow.
+
+## Intended behavior to verify
 
 | Situation | Result |
 |-----------|--------|
