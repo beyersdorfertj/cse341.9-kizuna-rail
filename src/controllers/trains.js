@@ -4,6 +4,10 @@ import {
   getAllTrains as findAllTrains,
 } from "../models/trains.js";
 
+export function trainsPage(req, res) {
+  res.render("trains", { title: "Trains" });
+}
+
 export async function getTrainById(req, res) {
   try {
     const { id } = req.params;
@@ -30,7 +34,7 @@ export async function getAllTrains(req, res) {
   try {
     const trains = await findAllTrains();
 
-    return res.status(200).json(trains);
+    return res.status(200).json({ trains });
   } catch (error) {
     console.error("Error fetching trains:", error);
 

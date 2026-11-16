@@ -1,0 +1,20 @@
+import { Router } from 'express';
+import { getAllTrains } from '../controllers/trains.js';
+import { getAllBookings } from '../controllers/bookings.js';
+import { getAllTrips, getTripById } from '../controllers/trips.js';
+
+const router = Router();
+
+// Trains API
+router.get('/trains', getAllTrains);
+
+// Feature Sets 1-3: add new JSON API routes below this line.
+
+// Trips API
+router.get('/trips', getAllTrips);
+router.get('/trips/:id', getTripById);
+
+// Feature Set 3: Bookings
+router.get('/bookings', getAllBookings);
+
+export default router;
