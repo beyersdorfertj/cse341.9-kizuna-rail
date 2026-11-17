@@ -1,0 +1,20 @@
+name: Enforce base branch
+
+# Fails for any PR whose base branch is not `main`.
+# Make this a required status check in a ruleset to block merges of stacked PRs
+# until their base has been retargeted to `main`.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  check-base:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require base = main
+        if: github.base_ref != 'main'
+        run: |
+          echo "PRs must target 'main' before merging (base was '${{ github.base_ref }}')."
+          echo "Merge the parent PR first; this PR will retarget to main automatically."
+          exit 1
