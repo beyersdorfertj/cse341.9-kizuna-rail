@@ -146,47 +146,80 @@
  *     responses:
  *       200:
  *         description: An object containing the list of bookings.
+
+/**
+ * @openapi
+ * /api/trips/{id}/schedules:
+ *   get:
+ *     summary: List schedules for a trip
+ *     description: Returns all schedules for the given trip, optionally filtered by month. Returns an empty array if the trip has no schedules.
+ *     tags:
+ *       - Schedules
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The trip identifier.
+ *         schema:
+ *           type: string
+ *           example: alpine-panorama
+ *       - name: month
+ *         in: query
+ *         required: false
+ *         description: Optional month filter (1-12).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 12
+ *           example: 7
+ *     responses:
+ *       200:
+ *         description: An array of schedule objects (empty if the trip has none).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                     example: 1
+ *                   tripId:
+ *                     type: string
+ *                     example: alpine-panorama
+ *                   departureTime:
+ *                     type: string
+ *                     example: "08:30"
+ *                   arrivalTime:
+ *                     type: string
+ *                     example: "12:15"
+ *                   daysOfWeek:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     example: ["Mon", "Wed", "Fri"]
+ *                   status:
+ *                     type: boolean
+ *                     example: true
+ *       400:
+ *         description: The month query parameter is invalid (not an integer between 1 and 12).
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 bookings:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         example: JRABC12345
- *                       scheduleId:
- *                         type: number
- *                         example: 1
- *                       tripId:
- *                         type: string
- *                         example: alpine-panorama
- *                       ticketClass:
- *                         type: string
- *                         example: premium
- *                       selectedDay:
- *                         type: string
- *                         example: monday
- *                       passengers:
- *                         type: array
- *                         items:
- *                           type: object
- *                           properties:
- *                             firstName:
- *                               type: string
- *                             lastName:
- *                               type: string
- *                             email:
- *                               type: string
- *                             phone:
- *                               type: string
- *                       createdAt:
- *                         type: string
- *                         format: date-time
+ *                 error:
+ *                   type: string
+ *                   example: month must be an integer between 1 and 12
  *       500:
- *         description: Internal server error
+ *         description: Unexpected server or database error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to fetch schedules
  */
