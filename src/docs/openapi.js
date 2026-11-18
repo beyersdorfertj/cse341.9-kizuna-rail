@@ -212,3 +212,87 @@
  *                   type: string
  *                   example: Failed to fetch schedules
  */
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Station:
+ *       type: object
+ *       required:
+ *         - id
+ *         - name
+ *         - prefecture
+ *         - region
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: nagoya
+ *         name:
+ *           type: string
+ *           example: Nagoya Station
+ *         prefecture:
+ *           type: string
+ *           example: Aichi
+ *         region:
+ *           type: string
+ *           example: central
+ *         facilities:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example: [restaurant, shop, restroom]
+ *         description:
+ *           type: string
+ *           example: Major transportation hub in central Japan.
+ */
+
+/**
+ * @openapi
+ * /api/stations:
+ *   get:
+ *     summary: Retrieve all stations
+ *     description: Returns all stations stored in the database.
+ *     tags:
+ *       - Stations
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved all stations.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Station'
+ *       '500':
+ *         description: Internal server error.
+ */
+
+/**
+ * @openapi
+ * /api/stations/{id}:
+ *   get:
+ *     summary: Retrieve a station by ID
+ *     description: Returns detailed information about one station.
+ *     tags:
+ *       - Stations
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Unique station ID.
+ *         schema:
+ *           type: string
+ *           example: nagoya
+ *     responses:
+ *       '200':
+ *         description: Station retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Station'
+ *       '404':
+ *         description: Station not found.
+ *       '500':
+ *         description: Internal server error.
+ */

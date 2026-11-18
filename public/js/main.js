@@ -304,6 +304,73 @@ const hookTripsCatalog = async () => {
     }
 };
 
+
+const hookStationDetails = () => {
+    const buttons = document.querySelectorAll('.station-details-button');
+
+    buttons.forEach((button) => {
+        button.addEventListener('click', async () => {
+            const stationId = button.dataset.stationId;
+            const station = button.closest('.station');
+            const detailsElement = station.querySelector('.station-details');
+
+            if (button.getAttribute('aria-expanded') === 'true') {
+                detailsElement.hidden = true;
+                button.setAttribute('aria-expanded', 'false');
+                button.textContent = 'View station details';
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(
+                    `/api/stations/${encodeURIComponent(stationId)}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('Could not load station details.');
+                }
+
+                const data = await response.json();
+
+                detailsElement.replaceChildren();
+
+                const information = [
+                    ['Prefecture', data.prefecture],
+                    ['Region', data.region],
+                    ['Facilities', (data.facilities || []).join(', ') || 'None listed'],
+                    ['Description', data.description || 'No description available']
+                ];
+
+                information.forEach(([label, value]) => {
+                    const paragraph = document.createElement('p');
+                    const strong = document.createElement('strong');
+
+                    strong.textContent = `${label}: `;
+                    paragraph.appendChild(strong);
+                    paragraph.appendChild(document.createTextNode(value));
+                    detailsElement.appendChild(paragraph);
+                });
+
+                detailsElement.hidden = false;
+                button.setAttribute('aria-expanded', 'true');
+                button.textContent = 'Hide station details';
+
+            } catch (error) {
+                console.error('Station details error:', error);
+                detailsElement.textContent = 'Unable to load station details.';
+                detailsElement.hidden = false;
+
+            } finally {
+                button.disabled = false;
+            }
+        });
+    });
+};
+
+
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('trips-list')) {
         hookTripsCatalog();
@@ -313,4 +380,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     hookTrainsCatalog();
     hookTripSchedules();
+    hookStationDetails();
 });
