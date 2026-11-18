@@ -27,7 +27,8 @@ export const processBookingRequest = async (req, res, next) => {
         return res.redirect(`/trips/bookings/${booking.id}`);
     } catch (error) {
         console.error('Error creating booking:', error);
-        error.status = 400;
+
+        error.status = error.name === 'ValidationError' ? 400 : 500;
         return next(error);
     }
 };
