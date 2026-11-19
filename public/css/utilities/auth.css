@@ -1,0 +1,74 @@
+.auth-page {
+    max-width: 480px;
+    margin: 0 auto;
+
+    .auth-error {
+        margin-bottom: var(--space-lg);
+        padding: var(--space-sm) var(--space-md);
+        color: #c33;
+        background-color: #fee;
+        border: 1px solid #fcc;
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-sm);
+    }
+
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-lg);
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+
+            .form-label {
+                font-size: var(--font-size-sm);
+                font-weight: 500;
+                color: var(--clr-text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+
+            .form-input {
+                padding: var(--space-sm) var(--space-md);
+                font-size: var(--font-size-md);
+                line-height: var(--line-height-md);
+                color: var(--clr-text-primary);
+                background-color: var(--clr-surface);
+                border: 1px solid var(--clr-border);
+                border-radius: var(--radius-md);
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+                &:focus {
+                    outline: none;
+                    border-color: var(--clr-primary);
+                    box-shadow: 0 0 0 3px rgba(127, 169, 143, 0.1);
+                }
+            }
+        }
+
+        .btn-primary {
+            align-self: flex-start;
+            padding: var(--space-sm) var(--space-xl);
+            font-size: var(--font-size-md);
+            font-weight: 500;
+            color: var(--clr-text-alt-primary);
+            background-color: var(--clr-primary);
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background-color: var(--clr-accent);
+                box-shadow: var(--shadow-md);
+            }
+        }
+    }
+
+    .auth-switch {
+        margin-top: var(--space-lg);
+        color: var(--clr-text-secondary);
+    }
+}
