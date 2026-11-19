@@ -1,4 +1,5 @@
 import express from 'express';
+import session from 'express-session';
 import Path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { fileURLToPath } from 'url';
@@ -26,6 +27,13 @@ app.set('views', Path.join(__dirname, 'src/views'));
 // Parse JSON and URL-encoded request bodies.
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Store the authenticated user in the session.
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false
+}));
 
 app.use(globalMiddleware);
 
