@@ -8,6 +8,8 @@ import {
   login,
   logout,
 } from '../controllers/auth.js';
+import { adminDashboardPage } from '../controllers/admin.js';
+import { requirePageRole } from '../middleware/auth.js';
 import railTripsRouter from './trips.js';
 
 const router = Router();
@@ -32,6 +34,9 @@ router.post('/register', register);
 router.get('/login', loginPage);
 router.post('/login', login);
 router.post('/logout', logout);
+
+// Admin
+router.get('/admin', requirePageRole('admin'), adminDashboardPage);
 
 // Test 500 error page
 router.get('/500', testErrorPage);
