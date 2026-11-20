@@ -1,0 +1,40 @@
+<%- include('./partials/header') %>
+
+    <section class="dashboard">
+        <div class="dashboard-welcome">
+            <h1>Welcome, <%= user.displayName %>!</h1>
+            <p>Welcome to your Kizuna Rail dashboard. Manage your bookings and explore your journeys.</p>
+        </div>
+
+        <section class="dashboard-bookings">
+            <h2>My Bookings</h2>
+            <p class="dashboard-subtitle">Here you can find your railway reservations.</p>
+
+            <div id="bookings-list">
+                <p id="bookings-loading">Loading your bookings...</p>
+            </div>
+        </section>
+
+        <section class="dashboard-links">
+            <h2>Quick Navigation</h2>
+
+            <div class="dashboard-links-grid">
+                <a href="/trips" class="dashboard-link">
+                    <h3>Explore Trips</h3>
+                    <p>Discover new railway journeys across Japan.</p>
+                </a>
+
+                <a href="/admin/bookings" class="dashboard-link">
+                    <h3>Booking Management</h3>
+                    <p>Access the booking management area.</p>
+                </a>
+
+                <a href="/admin/users" class="dashboard-link">
+                    <h3>User Management</h3>
+                    <p>Access the user management area.</p>
+                </a>
+            </div>
+        </section>
+    </section>
+
+    <%- include('./partials/footer') %>
