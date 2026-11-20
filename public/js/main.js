@@ -304,6 +304,80 @@ const hookTripsCatalog = async () => {
     }
 };
 
+const hookUserBookings = async () => {
+    const listEl = document.getElementById('bookings-list');
+    const loadingEl = document.getElementById('bookings-loading');
+
+    if (!listEl) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/my-bookings');
+
+        if (!response.ok) {
+            throw new Error(`Failed to load bookings (${response.status})`);
+        }
+
+        const bookings = await response.json();
+        listEl.replaceChildren();
+
+        if (loadingEl) {
+            loadingEl.hidden = true;
+        }
+
+        if (!Array.isArray(bookings) || bookings.length === 0) {
+            const emptyMessage = document.createElement('p');
+            emptyMessage.textContent = 'You do not have any bookings yet.';
+            listEl.appendChild(emptyMessage);
+            return;
+        }
+
+        bookings.forEach((booking) => {
+            const card = document.createElement('article');
+            card.className = 'dashboard-booking-card';
+
+            const heading = document.createElement('h3');
+            heading.textContent = `Booking ${booking.id}`;
+
+            const trip = document.createElement('p');
+            trip.textContent = `Trip: ${booking.tripId}`;
+
+            const schedule = document.createElement('p');
+            schedule.textContent = `Schedule: ${booking.scheduleId}`;
+
+            const travelDay = document.createElement('p');
+            travelDay.textContent = `Travel day: ${booking.selectedDay}`;
+
+            const ticketClass = document.createElement('p');
+            ticketClass.textContent = `Ticket class: ${booking.ticketClass}`;
+
+            card.append(
+                heading,
+                trip,
+                schedule,
+                travelDay,
+                ticketClass
+            );
+
+            listEl.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Failed to load user bookings:', error);
+
+        if (loadingEl) {
+            loadingEl.hidden = true;
+        }
+
+        listEl.replaceChildren();
+
+        const errorMessage = document.createElement('p');
+        errorMessage.textContent = 'Unable to load your bookings right now. Please try again later.';
+        listEl.appendChild(errorMessage);
+    }
+};
+
+
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('trips-list')) {
         hookTripsCatalog();
@@ -311,6 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
         hookRegionSorter();
         hookSeasonSorter();
     }
+
     hookTrainsCatalog();
     hookTripSchedules();
+    hookUserBookings();
 });
