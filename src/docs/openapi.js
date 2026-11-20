@@ -146,48 +146,45 @@
  *       - Bookings
  *     responses:
  *       200:
- *         description: A JSON object containing the list of bookings.
+ *         description: A JSON array containing the list of bookings.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 bookings:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         example: JRABC12345
- *                       scheduleId:
- *                         type: number
- *                         example: 1
- *                       tripId:
- *                         type: string
- *                         example: alpine-panorama
- *                       ticketClass:
- *                         type: string
- *                         example: premium
- *                       selectedDay:
- *                         type: string
- *                         example: monday
- *                       passengers:
- *                         type: array
- *                         items:
- *                           type: object
- *                           properties:
- *                             firstName:
- *                               type: string
- *                             lastName:
- *                               type: string
- *                             email:
- *                               type: string
- *                             phone:
- *                               type: string
- *                       createdAt:
- *                         type: string
- *                         format: date-time
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: JRABC12345
+ *                   scheduleId:
+ *                     type: number
+ *                     example: 1
+ *                   tripId:
+ *                     type: string
+ *                     example: alpine-panorama
+ *                   ticketClass:
+ *                     type: string
+ *                     example: premium
+ *                   selectedDay:
+ *                     type: string
+ *                     example: monday
+ *                   passengers:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         firstName:
+ *                           type: string
+ *                         lastName:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         phone:
+ *                           type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
  *       500:
  *         description: Internal server error
  */
