@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { homePage, aboutPage, testErrorPage } from './index.js';
+import { bookingsAdminPage } from '../controllers/bookings.js';
 import { trainsPage } from '../controllers/trains.js';
 import {
   registerPage,
@@ -28,6 +29,7 @@ router.use('/trips', railTripsRouter);
 
 // Feature Sets 1-3: add new page routes below this line.
 
+router.get('/bookings-admin', bookingsAdminPage);
 // Authentication
 router.get('/register', registerPage);
 router.post('/register', register);
