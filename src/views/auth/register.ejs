@@ -1,0 +1,36 @@
+<%- include('../partials/header') %>
+<article class="auth-page">
+    <h1>Register</h1>
+
+    <% if (error) { %>
+        <p class="auth-error"><%= error %></p>
+    <% } %>
+
+    <form class="auth-form" method="post" action="/register">
+        <div class="form-group">
+            <label class="form-label" for="displayName">Display name</label>
+            <input class="form-input" id="displayName" name="displayName" type="text" value="<%= values.displayName || '' %>" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input class="form-input" id="username" name="username" type="text" value="<%= values.username || '' %>" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-input" id="email" name="email" type="email" value="<%= values.email || '' %>" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-input" id="password" name="password" type="password" required>
+        </div>
+
+        <button class="btn-primary" type="submit">Register</button>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+</article>
+
+<%- include('../partials/footer') %>
