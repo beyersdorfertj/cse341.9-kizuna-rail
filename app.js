@@ -29,10 +29,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Store the authenticated user in the session.
+if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET is required');
+}
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    rolling: true,
+    cookie: {
+        maxAge: 1000 * 60 * 60
+    }
 }));
 
 app.use(globalMiddleware);

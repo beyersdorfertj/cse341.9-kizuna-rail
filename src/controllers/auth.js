@@ -18,7 +18,8 @@ export async function register(req, res) {
   try {
     const { displayName, username, email, password } = req.body;
 
-    if (!displayName || !username || !email || !password) {
+    const fields = [displayName, username, email, password];
+    if (fields.some((field) => typeof field !== "string" || !field.trim())) {
       return res.status(400).render("auth/register", {
         title: "Register",
         error: "All fields are required.",
@@ -53,6 +54,14 @@ export async function register(req, res) {
 export async function login(req, res) {
   try {
     const { username, password } = req.body;
+
+    if (typeof username !== "string" || typeof password !== "string") {
+      return res.status(400).render("auth/login", {
+        title: "Login",
+        error: "Invalid credentials.",
+        values: {},
+      });
+    }
 
     const user =
       (await getUserByUsername(username)) || (await getUserByEmail(username));

@@ -27,7 +27,7 @@ const requirePageRole = (role) => (req, res, next) => {
         return res.redirect('/login');
     }
     if (req.session.user.role !== role) {
-        return res.status(403).render('errors/500', { title: 'Forbidden', error: 'Forbidden', stack: '' });
+        return res.status(403).render('errors/403', { title: 'Access Denied' });
     }
     return next();
 };
