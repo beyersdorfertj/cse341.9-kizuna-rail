@@ -3,6 +3,8 @@ import { getAllTrains } from '../controllers/trains.js';
 import { getSchedulesForTrip } from '../controllers/schedules.js';
 import { getAllBookings } from '../controllers/bookings.js';
 import { getAllTrips, getTripById } from '../controllers/trips.js';
+import { deleteUser, getUsers, updateUser } from '../controllers/users.js';
+import { requireApiLogin } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -20,5 +22,10 @@ router.get('/trips/:id', getTripById);
 
 // Feature Set 3: Bookings
 router.get('/bookings', getAllBookings);
+
+// Feature Set 3: User management
+router.get('/users', requireApiLogin, getUsers);
+router.put('/users/:id', requireApiLogin, updateUser);
+router.delete('/users/:id', requireApiLogin, deleteUser);
 
 export default router;
