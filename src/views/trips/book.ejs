@@ -201,6 +201,7 @@
     const passengerCountDisplay = document.getElementById('passengerCount');
     const pricePerTicket = document.getElementById('pricePerTicket');
     const totalAmount = document.getElementById('totalAmount');
+    const submitBtn = document.querySelector('.booking-form button[type="submit"]');
 
     const updateSummary = () => {
         passengerCountDisplay.textContent = passengerCount;
@@ -387,13 +388,18 @@
     };
 
     // Enable ticket classes available for the given day, disable the rest.
+    let availabilityRequestId = 0;
     const updateTicketAvailability = async (day) => {
         if (!day) return;
 
+        const requestId = ++availabilityRequestId;
         const response = await fetch(`/api/ticket-classes?day=${encodeURIComponent(day)}`);
         if (!response.ok) return;
 
         const available = await response.json();
+        // A newer day selection superseded this response; ignore the stale one.
+        if (requestId !== availabilityRequestId) return;
+
         const availableClasses = new Set(available.map((ticket) => ticket.class));
 
         let selectionCleared = false;
@@ -422,6 +428,10 @@
                 updateSummary();
             }
         }
+
+        // No class available for this day: block submission.
+        const hasAvailable = Array.from(ticketRadios).some((radio) => !radio.disabled);
+        submitBtn.disabled = !hasAvailable;
     };
 
     // Event Listeners

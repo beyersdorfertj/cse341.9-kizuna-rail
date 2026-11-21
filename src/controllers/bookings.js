@@ -59,8 +59,7 @@ export const bookingPage = async (req, res, next) => {
             name: ticketClass.name,
             price: trip.distance * ticketClass.pricePerKm,
             amenities: ticketClass.amenities,
-            description: ticketClass.description,
-            availableDays: ticketClass.availableDays
+            description: ticketClass.description
         }));
 
         return res.render('trips/book', {

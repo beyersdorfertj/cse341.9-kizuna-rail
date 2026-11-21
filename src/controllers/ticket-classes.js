@@ -6,7 +6,8 @@ import {
 
 export async function getAllTicketClasses(req, res) {
   try {
-    const { day } = req.query;
+    // Express yields an array for repeated query params; keep the first value.
+    const day = Array.isArray(req.query.day) ? req.query.day[0] : req.query.day;
 
     const ticketClasses = day
       ? await getTicketClassesForDay(day)
