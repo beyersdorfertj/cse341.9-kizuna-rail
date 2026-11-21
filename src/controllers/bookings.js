@@ -2,13 +2,33 @@ import {
     getAllBookings as FindAllBookings,
     createBooking,
     getBookingById,
+    getBookingsByPassengerEmail,
+    updateBookingById,
+    deleteBookingById
 } from '../models/bookings.js';
 import { getDb } from '../db/connect.js';
 import { generateConfirmationCode } from '../includes/helpers.js';
 
+function canManageBooking(user, booking) {
+    if (user.role === 'admin') {
+        return true;
+    }
+
+    const userEmail = user.email?.trim().toLowerCase();
+
+    return Boolean(userEmail) && booking.passengers.some(
+        (passenger) => passenger.email?.trim().toLowerCase() === userEmail
+    );
+}
+
 export const getAllBookings = async (req, res) => {
     try {
-        const bookings = await FindAllBookings();
+        const { role, email } = req.session.user;
+
+        const bookings = role === 'admin'
+            ? await FindAllBookings()
+            : await getBookingsByPassengerEmail(email);
+        
         return res.status(200).json( bookings );
     } catch (error) {
         console.error('Error fetching all bookings:', error);
@@ -91,5 +111,71 @@ export const confirmationPage = async (req, res, next) => {
         });
     } catch (error) {
         return next(error);
+    }
+};
+
+export const updateBooking = async (req, res) => {
+    try {
+        const booking = await getBookingById(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        if (!canManageBooking(req.session.user, booking)) {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        const updates = {};
+
+        for (const field of ['ticketClass', 'selectedDay']) {
+            if (req.body[field] !== undefined) {
+                if (typeof req.body[field] !== 'string' || !req.body[field].trim()) {
+                    return res.status(400).json({
+                        message: `Invalid value for ${field}`,
+                    });
+                }
+
+                updates[field] = req.body[field].trim();
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({
+                message: 'No valid booking fields provided',
+            });
+        }
+
+        const updatedBooking = await updateBookingById(req.params.id, updates);
+
+        return res.status(200).json(updatedBooking);
+    } catch (error) {
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: 'Invalid booking data' });
+        }
+
+        console.error('Error updating booking:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const deleteBooking = async (req, res) => {
+    try {
+        const booking = await getBookingById(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        if (!canManageBooking(req.session.user, booking)) {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        await deleteBookingById(req.params.id);
+
+        return res.status(200).json({ message: 'Booking has been deleted' });
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
 };

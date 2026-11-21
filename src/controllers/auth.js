@@ -79,6 +79,7 @@ export async function login(req, res) {
       displayName: user.displayName,
       username: user.username,
       role: user.role,
+      email: user.email
     };
 
     return res.redirect(user.role === "admin" ? "/admin" : "/");

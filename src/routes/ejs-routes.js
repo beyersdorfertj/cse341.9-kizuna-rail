@@ -10,7 +10,7 @@ import {
   logout,
 } from '../controllers/auth.js';
 import { adminDashboardPage } from '../controllers/admin.js';
-import { requirePageRole } from '../middleware/auth.js';
+import { requirePageRole, requirePageLogin } from '../middleware/auth.js';
 import railTripsRouter from './trips.js';
 
 const router = Router();
@@ -29,7 +29,6 @@ router.use('/trips', railTripsRouter);
 
 // Feature Sets 1-3: add new page routes below this line.
 
-router.get('/bookings-admin', bookingsAdminPage);
 // Authentication
 router.get('/register', registerPage);
 router.post('/register', register);
@@ -39,6 +38,7 @@ router.post('/logout', logout);
 
 // Admin
 router.get('/admin', requirePageRole('admin'), adminDashboardPage);
+router.get('/bookings-admin', requirePageLogin, bookingsAdminPage);
 
 // Test 500 error page
 router.get('/500', testErrorPage);
