@@ -265,3 +265,62 @@
  *                   type: string
  *                   example: Failed to fetch schedules
  */
+
+/**
+ * @openapi
+ * /api/ticket-classes:
+ *   get:
+ *     summary: List ticket classes
+ *     description: Returns all ticket classes, or only those available for a given day.
+ *     tags:
+ *       - Ticket Classes
+ *     parameters:
+ *       - name: day
+ *         in: query
+ *         required: false
+ *         description: Optional day-of-week filter.
+ *         schema:
+ *           type: string
+ *           example: monday
+ *     responses:
+ *       200:
+ *         description: An array of ticket-class objects (may be empty).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   class:
+ *                     type: string
+ *                     example: standard
+ *                   name:
+ *                     type: string
+ *                     example: Standard Class
+ *                   pricePerKm:
+ *                     type: number
+ *                     example: 80
+ *                   amenities:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   description:
+ *                     type: string
+ *                     example: Enjoy scenic views from comfortable seats
+ *                   availableDays:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     example: ["monday", "tuesday", "wednesday"]
+ *       500:
+ *         description: Unexpected server or database error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to fetch ticket classes
+ */
