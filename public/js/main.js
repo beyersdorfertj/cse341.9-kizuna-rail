@@ -304,7 +304,283 @@ const hookTripsCatalog = async () => {
     }
 };
 
+
+const hookTripAdmin = async () => {
+    const listEl = document.getElementById('trip-admin-list');
+    const form = document.getElementById('trip-admin-form');
+    const messageEl = document.getElementById('trip-admin-message');
+    const noSelectionEl = document.getElementById('trip-admin-no-selection');
+    const schedulesEl = document.getElementById('trip-admin-schedules');
+    const cancelButton = document.getElementById('trip-admin-cancel');
+    const scheduleDataEl = document.getElementById('trip-admin-schedule-data');
+
+    if (!listEl || !form || !messageEl) return;
+
+    let trips = [];
+    let schedules = [];
+
+    try {
+        schedules = JSON.parse(scheduleDataEl?.textContent || '[]');
+    } catch (error) {
+        console.error('Failed to read trip schedules:', error);
+    }
+
+    const field = (id) => document.getElementById(id);
+
+    const showMessage = (message, isError = false) => {
+        messageEl.textContent = message;
+        messageEl.dataset.type = isError ? 'error' : 'success';
+    };
+
+    const hideForm = () => {
+        form.hidden = true;
+        form.reset();
+        if (noSelectionEl) noSelectionEl.hidden = false;
+        if (schedulesEl) schedulesEl.replaceChildren();
+    };
+
+    const renderTrips = () => {
+        listEl.replaceChildren();
+
+        if (trips.length === 0) {
+            const empty = document.createElement('p');
+            empty.textContent = 'No trips found.';
+            listEl.appendChild(empty);
+            return;
+        }
+
+        trips.forEach((trip) => {
+            const article = document.createElement('article');
+            article.className = 'trip-admin-row';
+
+            const heading = document.createElement('h3');
+            heading.textContent = trip.name;
+
+            const details = document.createElement('p');
+            details.textContent =
+                `${trip.region} | ${trip.startStation} to ${trip.endStation} | ${trip.distance} km`;
+
+            const editButton = document.createElement('button');
+            editButton.type = 'button';
+            editButton.textContent = 'Edit';
+            editButton.dataset.action = 'edit';
+            editButton.dataset.id = trip.id;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.textContent = 'Delete';
+            deleteButton.dataset.action = 'delete';
+            deleteButton.dataset.id = trip.id;
+
+            article.append(heading, details, editButton, deleteButton);
+            listEl.appendChild(article);
+        });
+    };
+
+    const renderSchedules = (tripId) => {
+        schedulesEl.replaceChildren();
+
+        const matchingSchedules = schedules.filter(
+            (schedule) => schedule.tripId === tripId
+        );
+
+        if (matchingSchedules.length === 0) {
+            const empty = document.createElement('p');
+            empty.textContent = 'No schedules are associated with this trip.';
+            schedulesEl.appendChild(empty);
+            return;
+        }
+
+        matchingSchedules.forEach((schedule) => {
+            const item = document.createElement('p');
+            const days = Array.isArray(schedule.daysOfWeek)
+                ? schedule.daysOfWeek.join(', ')
+                : 'Days not specified';
+
+            item.textContent =
+                `Schedule ${schedule.id}: ${schedule.departureTime}–${schedule.arrivalTime}; ${days}; ${schedule.status ? 'Active' : 'Inactive'}`;
+
+            schedulesEl.appendChild(item);
+        });
+    };
+
+    const editTrip = (trip) => {
+        field('trip-id').value = trip.id;
+        field('trip-name').value = trip.name || '';
+        field('trip-description').value = trip.description || '';
+        field('trip-region').value = trip.region || '';
+        field('trip-start-station').value = trip.startStation || '';
+        field('trip-end-station').value = trip.endStation || '';
+        field('trip-duration').value = trip.duration || '';
+        field('trip-distance').value = trip.distance ?? '';
+        field('trip-highlights').value =
+            Array.isArray(trip.highlights) ? trip.highlights.join(', ') : '';
+        field('trip-best-season').value = trip.bestSeason || '';
+        field('trip-operating-months').value =
+            Array.isArray(trip.operatingMonths)
+                ? trip.operatingMonths.join(', ')
+                : '';
+        field('trip-image-url').value = trip.imageUrl || '';
+
+        renderSchedules(trip.id);
+        form.hidden = false;
+        if (noSelectionEl) noSelectionEl.hidden = true;
+        showMessage(`Editing ${trip.name}.`);
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const loadTrips = async () => {
+        const response = await fetch('/api/trips');
+
+        if (!response.ok) {
+            throw new Error(`Failed to load trips (${response.status}).`);
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error('Expected a list of trips from the API.');
+        }
+
+        trips = data;
+        renderTrips();
+    };
+
+    listEl.addEventListener('click', async (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+
+        const trip = trips.find((item) => item.id === button.dataset.id);
+        if (!trip) return;
+
+        if (button.dataset.action === 'edit') {
+            editTrip(trip);
+            return;
+        }
+
+        if (button.dataset.action === 'delete') {
+            if (!window.confirm(`Delete the trip "${trip.name}"?`)) return;
+
+            try {
+                button.disabled = true;
+
+                const response = await fetch(
+                    `/api/trips/${encodeURIComponent(trip.id)}`,
+                    { method: 'DELETE' }
+                );
+
+                const result = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Unable to delete trip.');
+                }
+
+                trips = trips.filter((item) => item.id !== trip.id);
+                renderTrips();
+                hideForm();
+                showMessage('Trip deleted successfully.');
+            } catch (error) {
+                showMessage(error.message, true);
+                button.disabled = false;
+            }
+        }
+    });
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const tripId = field('trip-id').value;
+
+        const operatingMonths = field('trip-operating-months').value
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean)
+            .map(Number);
+
+        const highlights = field('trip-highlights').value
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean);
+
+        if (
+            operatingMonths.some(
+                (month) => !Number.isInteger(month) || month < 1 || month > 12
+            )
+        ) {
+            showMessage('Operating months must be whole numbers from 1 to 12.', true);
+            return;
+        }
+
+        const payload = {
+            name: field('trip-name').value.trim(),
+            description: field('trip-description').value.trim(),
+            region: field('trip-region').value.trim(),
+            startStation: field('trip-start-station').value,
+            endStation: field('trip-end-station').value,
+            duration: field('trip-duration').value.trim(),
+            distance: Number(field('trip-distance').value),
+            highlights,
+            bestSeason: field('trip-best-season').value.trim(),
+            operatingMonths,
+            imageUrl: field('trip-image-url').value.trim()
+        };
+
+        if (!payload.name || !payload.region || !payload.startStation ||
+            !payload.endStation || !Number.isFinite(payload.distance) ||
+            payload.distance < 0) {
+            showMessage('Please complete all required fields with valid values.', true);
+            return;
+        }
+
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        try {
+            submitButton.disabled = true;
+
+            const response = await fetch(
+                `/api/trips/${encodeURIComponent(tripId)}`,
+                {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }
+            );
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Unable to update trip.');
+            }
+
+            trips = trips.map((trip) =>
+                trip.id === tripId ? result : trip
+            );
+
+            renderTrips();
+            editTrip(result);
+            showMessage('Trip updated successfully.');
+        } catch (error) {
+            showMessage(error.message, true);
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+
+    cancelButton?.addEventListener('click', hideForm);
+
+    try {
+        await loadTrips();
+    } catch (error) {
+        console.error('Failed to load admin trips:', error);
+        showMessage('Unable to load trips. Please try again.', true);
+        listEl.textContent = 'Unable to load trips.';
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('trip-admin-list')) {
+        hookTripAdmin();
+    }
     if (document.getElementById('trips-list')) {
         hookTripsCatalog();
     } else {

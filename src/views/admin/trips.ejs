@@ -1,0 +1,104 @@
+<%- include('../partials/header') %>
+
+<section class="content">
+    <h1>Trip Admin</h1>
+    <p>Signed in as <%= user.displayName %>.</p>
+    <p>Manage existing train trips. Only existing stations and schedules are available.</p>
+
+    <div id="trip-admin-message" role="status" aria-live="polite"></div>
+
+    <section aria-labelledby="trip-list-heading">
+        <h2 id="trip-list-heading">Existing Trips</h2>
+        <div id="trip-admin-list">
+            <p>Loading trips...</p>
+        </div>
+    </section>
+
+    <section aria-labelledby="trip-edit-heading">
+        <h2 id="trip-edit-heading">Edit Trip</h2>
+
+        <form id="trip-admin-form" hidden>
+            <input type="hidden" id="trip-id" name="id">
+
+            <div>
+                <label for="trip-name">Trip name</label>
+                <input id="trip-name" name="name" type="text" required>
+            </div>
+
+            <div>
+                <label for="trip-description">Description</label>
+                <textarea id="trip-description" name="description" rows="3"></textarea>
+            </div>
+
+            <div>
+                <label for="trip-region">Region</label>
+                <input id="trip-region" name="region" type="text" required>
+            </div>
+
+            <div>
+                <label for="trip-start-station">Starting station</label>
+                <select id="trip-start-station" name="startStation" required>
+                    <option value="">Select an existing station</option>
+                    <% stations.forEach(station => { %>
+                        <option value="<%= station.id %>"><%= station.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div>
+                <label for="trip-end-station">Ending station</label>
+                <select id="trip-end-station" name="endStation" required>
+                    <option value="">Select an existing station</option>
+                    <% stations.forEach(station => { %>
+                        <option value="<%= station.id %>"><%= station.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div>
+                <label for="trip-duration">Duration</label>
+                <input id="trip-duration" name="duration" type="text">
+            </div>
+
+            <div>
+                <label for="trip-distance">Distance</label>
+                <input id="trip-distance" name="distance" type="number" min="0" step="any" required>
+            </div>
+
+            <div>
+                <label for="trip-highlights">Highlights (comma-separated)</label>
+                <textarea id="trip-highlights" name="highlights" rows="2"></textarea>
+            </div>
+
+            <div>
+                <label for="trip-best-season">Best season</label>
+                <input id="trip-best-season" name="bestSeason" type="text">
+            </div>
+
+            <div>
+                <label for="trip-operating-months">Operating months (1–12, comma-separated)</label>
+                <input id="trip-operating-months" name="operatingMonths" type="text">
+            </div>
+
+            <div>
+                <label for="trip-image-url">Image URL</label>
+                <input id="trip-image-url" name="imageUrl" type="url">
+            </div>
+
+            <div>
+                <h3>Existing schedules for this trip</h3>
+                <p>Schedules are linked to trips through their trip ID and are displayed here for reference.</p>
+                <div id="trip-admin-schedules"></div>
+            </div>
+
+            <button type="submit">Save Changes</button>
+            <button type="button" id="trip-admin-cancel">Cancel</button>
+        </form>
+
+        <p id="trip-admin-no-selection">Choose a trip above to edit it.</p>
+    </section>
+</section>
+
+<script id="trip-admin-schedule-data" type="application/json"><%- JSON.stringify(schedules) %></script>
+
+<%- include('../partials/footer') %>

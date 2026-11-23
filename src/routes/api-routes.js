@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { getAllTrains } from '../controllers/trains.js';
 import { getSchedulesForTrip } from '../controllers/schedules.js';
 import { getAllBookings } from '../controllers/bookings.js';
-import { getAllTrips, getTripById } from '../controllers/trips.js';
+import { getAllTrips, getTripById, updateTrip, deleteTrip } from '../controllers/trips.js';
+import { requireApiRole } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -17,6 +18,8 @@ router.get('/trips/:id/schedules', getSchedulesForTrip);
 // Trips API
 router.get('/trips', getAllTrips);
 router.get('/trips/:id', getTripById);
+router.put('/trips/:id', requireApiRole('admin'), updateTrip);
+router.delete('/trips/:id', requireApiRole('admin'), deleteTrip);
 
 // Feature Set 3: Bookings
 router.get('/bookings', getAllBookings);

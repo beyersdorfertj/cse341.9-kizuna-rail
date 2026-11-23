@@ -10,6 +10,7 @@ import {
   logout,
 } from '../controllers/auth.js';
 import { adminDashboardPage } from '../controllers/admin.js';
+import { tripAdminPage } from '../controllers/trips.js';
 import { requirePageRole } from '../middleware/auth.js';
 import railTripsRouter from './trips.js';
 
@@ -39,6 +40,7 @@ router.post('/logout', logout);
 
 // Admin
 router.get('/admin', requirePageRole('admin'), adminDashboardPage);
+router.get('/admin/trips', requirePageRole('admin'), tripAdminPage);
 
 // Test 500 error page
 router.get('/500', testErrorPage);
