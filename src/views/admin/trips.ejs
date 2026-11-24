@@ -99,6 +99,6 @@
     </section>
 </section>
 
-<script id="trip-admin-schedule-data" type="application/json"><%- JSON.stringify(schedules) %></script>
+<script id="trip-admin-schedule-data" type="application/json"><%- JSON.stringify(schedules).replace(/</g, '\\u003c') %></script>
 
 <%- include('../partials/footer') %>
