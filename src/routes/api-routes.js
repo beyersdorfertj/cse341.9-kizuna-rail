@@ -1,9 +1,12 @@
+
 import { Router } from 'express';
 import { requireApiLogin } from '../middleware/auth.js';
 import { getAllTrains } from '../controllers/trains.js';
 import { getSchedulesForTrip } from '../controllers/schedules.js';
 import { getAllBookings, updateBooking, deleteBooking } from '../controllers/bookings.js';
 import { getAllTrips, getTripById } from '../controllers/trips.js';
+import { getMyBookings } from '../controllers/dashboard.js';
+import { requireApiLogin } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -14,6 +17,9 @@ router.get('/trains', getAllTrains);
 router.get('/trips/:id/schedules', getSchedulesForTrip);
 
 // Feature Sets 1-3: add new JSON API routes below this line.
+
+// User Dashboard - Feature Set 2
+router.get('/my-bookings', requireApiLogin, getMyBookings);
 
 // Trips API
 router.get('/trips', getAllTrips);

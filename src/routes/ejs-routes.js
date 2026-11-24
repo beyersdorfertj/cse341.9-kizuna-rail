@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import { homePage, aboutPage, testErrorPage } from './index.js';
 import { bookingsAdminPage } from '../controllers/bookings.js';
@@ -10,7 +11,10 @@ import {
   logout,
 } from '../controllers/auth.js';
 import { adminDashboardPage } from '../controllers/admin.js';
+
+import { dashboardPage } from '../controllers/dashboard.js';
 import { requirePageRole, requirePageLogin } from '../middleware/auth.js';
+
 import railTripsRouter from './trips.js';
 
 const router = Router();
@@ -28,6 +32,10 @@ router.get('/trains', trainsPage);
 router.use('/trips', railTripsRouter);
 
 // Feature Sets 1-3: add new page routes below this line.
+
+
+ // User Dashboard - Feature Set 2
+router.get('/dashboard', requirePageRole('user'), dashboardPage);
 
 // Authentication
 router.get('/register', registerPage);
