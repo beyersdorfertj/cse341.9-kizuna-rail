@@ -1,0 +1,114 @@
+<%- include('./partials/header') %>
+
+<article class="booking-page">
+    <header class="route-header">
+        <div class="route-header-content">
+            <h1 class="route-name">Bookings Administration</h1>
+            <p>
+                View all customer bookings across the Kizuna Rail network.
+            </p>
+        </div>
+    </header>
+
+    <section class="bookings-catalog">
+        <div class="bookings-state" id="bookings-loading">
+            Loading bookings...
+        </div>
+    
+        <div class="bookings-state bookings-error" id="bookings-error" hidden></div>
+    
+        <div class="bookings-grid" id="bookings-list"></div>
+    
+        <template id="booking-card-template">
+            <article class="booking-card">
+                <header class="booking-card-header">
+                    <h3 data-field="id"></h3>
+                    <span class="booking-class" data-field="ticketClass">Ticket Class: </span>
+                </header>
+        
+                <div class="booking-details">
+                    <p class="detail-row">
+                        <strong>Trip ID:</strong>
+                        <span data-field="tripId"></span>
+                    </p>
+        
+                    <p class="detail-row">
+                        <strong>Schedule ID:</strong>
+                        <span data-field="scheduleId"></span>
+                    </p>
+        
+                    <p class="detail-row">
+                        <strong>Travel Day:</strong>
+                        <span data-field="selectedDay"></span>
+                    </p>
+        
+                    <p class="detail-row">
+                        <strong>Passengers:</strong>
+                        <span data-field="passengerCount"></span>
+                    </p>
+        
+                    <p class="detail-row">
+                        <strong>Created:</strong>
+                        <span data-field="createdAt"></span>
+                    </p>
+                </div>
+            </article>
+        </template>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingElement = document.getElementById('bookings-loading');
+            const errorElement = document.getElementById('bookings-error');
+            const bookingsList = document.getElementById('bookings-list');
+            const template = document.getElementById('booking-card-template');
+
+            try {
+                const response = await fetch('/api/bookings');
+
+                if (!response.ok) {
+                    throw new Error('Failed to load bookings.');
+                }
+
+                const data = await response.json();
+                const bookings = data.bookings || data;
+
+                loadingElement.hidden = true;
+
+                bookings.forEach((booking) => {
+                    const clone = template.content.cloneNode(true);
+
+                    clone.querySelector('[data-field="id"]').textContent =
+                        `Booking ID: ${booking.id}`;
+
+                    clone.querySelector('[data-field="ticketClass"]').textContent =
+                        `Ticket Class: ${booking.ticketClass}`;
+
+                    clone.querySelector('[data-field="tripId"]').textContent =
+                        booking.tripId;
+
+                    clone.querySelector('[data-field="scheduleId"]').textContent =
+                        booking.scheduleId;
+
+                    clone.querySelector('[data-field="selectedDay"]').textContent =
+                        booking.selectedDay;
+
+                    clone.querySelector('[data-field="passengerCount"]').textContent =
+                        booking.passengers?.length || 0;
+
+                    clone.querySelector('[data-field="createdAt"]').textContent =
+                        booking.createdAt
+                            ? new Date(booking.createdAt).toLocaleDateString()
+                            : 'N/A';
+
+                    bookingsList.appendChild(clone);
+                });
+            } catch (error) {
+                loadingElement.hidden = true;
+                errorElement.hidden = false;
+                errorElement.textContent = error.message;
+            }
+        });
+    </script>
+
+    <%- include('./partials/footer') %>

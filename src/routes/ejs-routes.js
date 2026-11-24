@@ -1,5 +1,7 @@
+
 import { Router } from 'express';
 import { homePage, aboutPage, testErrorPage } from './index.js';
+import { bookingsAdminPage } from '../controllers/bookings.js';
 import { trainsPage } from '../controllers/trains.js';
 import {
   registerPage,
@@ -31,6 +33,9 @@ router.use('/trips', railTripsRouter);
 
 // User Dashboard - Feature Set 2
 router.get('/dashboard', requirePageRole('user'), dashboardPage);
+
+// Booking Admin - Feature Set 4
+router.get('/bookings-admin', bookingsAdminPage);
 
 // Authentication
 router.get('/register', registerPage);
