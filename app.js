@@ -42,12 +42,6 @@ app.use(session({
     }
 }));
 
-// Make the authenticated user available to EJS templates.
-app.use((req, res, next) => {
-    res.locals.currentUser = req.session.user || null;
-    next();
-});
-
 app.use(globalMiddleware);
 
 // Swagger UI for the API documentation.
