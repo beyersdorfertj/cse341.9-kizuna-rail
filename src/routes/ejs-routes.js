@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { homePage, aboutPage, testErrorPage } from './index.js';
+import { bookingsAdminPage } from '../controllers/bookings.js';
 import { trainsPage } from '../controllers/trains.js';
 import {
   registerPage,

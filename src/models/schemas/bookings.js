@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema(
   {
@@ -24,16 +24,23 @@ const bookingSchema = new mongoose.Schema(
       required: true
     },
     passengers: {
-      type: Array,
-      required: true
+      type: [{
+        firstName: { type: String, required: true, trim: true },
+        lastName: { type: String, required: true, trim: true },
+        email: { type: String, required: true, trim: true },
+        phone: { type: String, required: true, trim: true }
+      }],
+      required: true,
+      validate: { validator: (passengers) => passengers.length > 0, message: 'At least one passenger is required.' }
     },
     createdAt: {
       type: Date,
       default: Date.now
     }
-  }
+  },
+  { collection: 'bookings' }
 );
 
-const booking = mongoose.model("Booking", bookingSchema);
+const booking = mongoose.models.Booking || mongoose.model('Booking', bookingSchema);
 
 export default booking;

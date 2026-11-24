@@ -138,6 +138,179 @@
 
 /**
  * @openapi
+ * /api/bookings:
+ *   get:
+ *     summary: List all bookings
+ *     description: Returns every booking stored in the database.
+ *     tags:
+ *       - Bookings
+ *     responses:
+ *       200:
+ *         description: A JSON array containing the list of bookings.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: JRABC12345
+ *                   scheduleId:
+ *                     type: number
+ *                     example: 1
+ *                   tripId:
+ *                     type: string
+ *                     example: alpine-panorama
+ *                   ticketClass:
+ *                     type: string
+ *                     example: premium
+ *                   selectedDay:
+ *                     type: string
+ *                     example: monday
+ *                   passengers:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         firstName:
+ *                           type: string
+ *                         lastName:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         phone:
+ *                           type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
+ * /api/bookings/{id}:
+ *   put:
+ *     summary: Update a booking
+ *     description: Updates editable booking fields. Requires a signed-in user who is an admin or a passenger on the booking.
+ *     tags:
+ *       - Bookings
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Booking reference ID
+ *         schema:
+ *           type: string
+ *           example: JRABC12345
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
+ *             properties:
+ *               ticketClass:
+ *                 type: string
+ *                 enum: [standard, premium, first]
+ *                 example: premium
+ *               selectedDay:
+ *                 type: string
+ *                 example: monday
+ *     responses:
+ *       200:
+ *         description: Booking updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 ticketClass:
+ *                   type: string
+ *                 selectedDay:
+ *                   type: string
+ *       400:
+ *         description: Invalid or missing booking fields
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: User is not an admin or passenger on this booking
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
+ * /api/bookings/{id}:
+ *   delete:
+ *     summary: Delete a booking
+ *     description: Deletes a booking. Requires a signed-in user who is an admin or a passenger on the booking.
+ *     tags:
+ *       - Bookings
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Booking reference ID
+ *         schema:
+ *           type: string
+ *           example: JRABC12345
+ *     responses:
+ *       200:
+ *         description: Booking deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Booking has been deleted
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: User is not an admin or passenger on this booking
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
+ * /bookings-admin:
+ *   get:
+ *     summary: Display the booking admin page
+ *     description: Renders the bookings page for a signed-in user. The page loads bookings dynamically from the API.
+ *     tags:
+ *       - Booking Pages
+ *     responses:
+ *       200:
+ *         description: Bookings page rendered
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       302:
+ *         description: Redirects an unauthenticated visitor to the login page
+ *         headers:
+ *           Location:
+ *             schema:
+ *               type: string
+ *             example: /login
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
  * /api/trips/{id}/schedules:
  *   get:
  *     summary: List schedules for a trip
