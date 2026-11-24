@@ -40,6 +40,9 @@
         </template>
         
         <template id="booking-edit-template">
+            <header class="booking-edit-header">
+                <h2 data-field="edit-title"></h2>
+            </header>
             <form class="booking-edit-form" data-booking-id="">
                 <label>
                     Ticket class
@@ -118,12 +121,14 @@
             function showEditor(card, booking) {
                 const editor = editTemplate.content.cloneNode(true);
                 const form = editor.querySelector('form');
+                editor.querySelector('[data-field="edit-title"]').textContent =
+                    `Editing Booking: ${booking.id}`;
 
                 form.dataset.bookingId = booking.id;
                 form.elements.ticketClass.value = booking.ticketClass;
                 form.elements.selectedDay.value = booking.selectedDay;
 
-                card.replaceWith(editor);
+                bookingsList.replaceChildren(editor);
                 form.elements.ticketClass.focus();
             }
 
