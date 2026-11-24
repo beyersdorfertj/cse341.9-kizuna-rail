@@ -39,25 +39,25 @@
                     <li><a href="/trips">Trips</a></li>
                     <li><a href="/trains">Trains</a></li>
                     <li><a href="/about">About</a></li>
-
-                    <% if (user) { %>
-                        <% if (user.role==='admin' ) { %>
-                            <li><a href="/admin">Admin Dashboard</a></li>
-                            <% } else { %>
-                                <li><a href="/dashboard">Dashboard</a></li>
-                                <% } %>
-                                    <li>
-                                        <form action="/logout" method="POST">
-                                            <button type="submit">Logout</button>
-                                        </form>
-                                    </li>
-                                    <% } else { %>
-                                        <li><a href="/register">Register</a></li>
-                                        <li><a href="/login">Login</a></li>
-                                        <% } %>
-
-                                            <li><a href="/404">404</a></li>
-                                            <li><a href="/500">500</a></li>
+                  
+<% if (locals.user) { %>
+    <% if (locals.user.role === 'admin') { %>
+        <li><a href="/admin">Admin Dashboard</a></li>
+    <% } else { %>
+        <li><a href="/dashboard">Dashboard</a></li>
+    <% } %>
+    <li>
+        <form method="POST" action="/logout">
+            <button type="submit">Logout</button>
+        </form>
+    </li>
+<% } else { %>
+    <li><a href="/register">Register</a></li>
+    <li><a href="/login">Login</a></li>
+<% } %>
+<li><a href="/404">404</a></li>
+<li><a href="/500">500</a></li>
+ 
                 </ul>
             </nav>
         </div>
