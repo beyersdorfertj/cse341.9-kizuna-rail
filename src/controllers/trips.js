@@ -176,10 +176,8 @@ export async function deleteTrip(req, res) {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    await db.collection("schedules").deleteMany({ tripId });
-
     return res.status(200).json({
-      message: "Trip and its associated schedules deleted",
+      message: "Trip deleted successfully",
     });
   } catch (error) {
     console.error("Failed to delete trip:", error);
