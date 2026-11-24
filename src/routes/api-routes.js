@@ -20,7 +20,7 @@ router.get('/trips', getAllTrips);
 router.get('/trips/:id', getTripById);
 
 // Feature Set 3: Bookings
-router.get('/bookings', getAllBookings);
+router.get('/bookings', requireApiLogin, getAllBookings);
 router.put('/bookings/:id', requireApiLogin, updateBooking);
 router.delete('/bookings/:id', requireApiLogin, deleteBooking);
 
