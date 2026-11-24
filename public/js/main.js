@@ -583,13 +583,6 @@ const hookTripAdmin = async () => {
         body: JSON.stringify(payload),
       });
 
-      // let result = {};
-
-            try {
-                result = await response.json();
-            } catch {
-                result = {};
-            }
       let result = {};
 
       try {
