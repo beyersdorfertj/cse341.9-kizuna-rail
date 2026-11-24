@@ -24,10 +24,11 @@ function canManageBooking(user, booking) {
 export const getAllBookings = async (req, res) => {
     try {
         const { role, email } = req.session.user;
+        const normalizedEmail = email?.trim().toLowerCase();
 
         const bookings = role === 'admin'
             ? await FindAllBookings()
-            : await getBookingsByPassengerEmail(email);
+            : await getBookingsByPassengerEmail(normalizedEmail);
         
         return res.status(200).json( bookings );
     } catch (error) {
