@@ -1,8 +1,9 @@
 
 import { Router } from 'express';
+import { requireApiLogin } from '../middleware/auth.js';
 import { getAllTrains } from '../controllers/trains.js';
 import { getSchedulesForTrip } from '../controllers/schedules.js';
-import { getAllBookings } from '../controllers/bookings.js';
+import { getAllBookings, updateBooking, deleteBooking } from '../controllers/bookings.js';
 import { getAllTrips, getTripById } from '../controllers/trips.js';
 import { getMyBookings } from '../controllers/dashboard.js';
 import { requireApiLogin } from '../middleware/auth.js';
@@ -25,6 +26,8 @@ router.get('/trips', getAllTrips);
 router.get('/trips/:id', getTripById);
 
 // Feature Set 3: Bookings
-router.get('/bookings', getAllBookings);
+router.get('/bookings', requireApiLogin, getAllBookings);
+router.put('/bookings/:id', requireApiLogin, updateBooking);
+router.delete('/bookings/:id', requireApiLogin, deleteBooking);
 
 export default router;
