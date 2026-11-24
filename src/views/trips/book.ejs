@@ -201,6 +201,7 @@
     const passengerCountDisplay = document.getElementById('passengerCount');
     const pricePerTicket = document.getElementById('pricePerTicket');
     const totalAmount = document.getElementById('totalAmount');
+    const submitBtn = document.querySelector('.booking-form button[type="submit"]');
 
     const updateSummary = () => {
         passengerCountDisplay.textContent = passengerCount;
@@ -386,6 +387,53 @@
         console.log(`✓ Filled ${cards.length} passenger form(s)`);
     };
 
+    // Enable ticket classes available for the given day, disable the rest.
+    let availabilityRequestId = 0;
+    const updateTicketAvailability = async (day) => {
+        if (!day) return;
+
+        const requestId = ++availabilityRequestId;
+        const response = await fetch(`/api/ticket-classes?day=${encodeURIComponent(day)}`);
+        if (!response.ok) return;
+
+        const available = await response.json();
+        // A newer day selection superseded this response; ignore the stale one.
+        if (requestId !== availabilityRequestId) return;
+
+        const availableClasses = new Set(available.map((ticket) => ticket.class));
+
+        let selectionCleared = false;
+        ticketRadios.forEach((radio) => {
+            const card = radio.closest('.ticket-card');
+            const isAvailable = availableClasses.has(radio.value);
+
+            radio.disabled = !isAvailable;
+            card.classList.toggle('disabled', !isAvailable);
+
+            if (!isAvailable && radio.checked) {
+                radio.checked = false;
+                radio.removeAttribute('checked');
+                selectionCleared = true;
+            }
+        });
+
+        // If the selected class is no longer available, pick the first available one.
+        if (selectionCleared) {
+            const firstAvailable = Array.from(ticketRadios).find((radio) => !radio.disabled);
+            if (firstAvailable) {
+                firstAvailable.checked = true;
+                firstAvailable.setAttribute('checked', true);
+                selectedTicketName.textContent = firstAvailable.dataset.name;
+                ticketPrice = parseInt(firstAvailable.dataset.price);
+                updateSummary();
+            }
+        }
+
+        // No class available for this day: block submission.
+        const hasAvailable = Array.from(ticketRadios).some((radio) => !radio.disabled);
+        submitBtn.disabled = !hasAvailable;
+    };
+
     // Event Listeners
     selectedDayLabels.forEach((label) => {
         label.addEventListener('click', (e) => {
@@ -402,6 +450,8 @@
             label.classList.add('selected');
             label.querySelector('input').checked = true;
             label.querySelector('input').setAttribute('checked', true);
+
+            updateTicketAvailability(label.querySelector('input').value);
         });
     });
 
@@ -451,6 +501,12 @@
         ticketPrice = parseInt(selectedRadio.dataset.price);
     }
     updateSummary();
+
+    // Apply availability for the day selected by default on page load.
+    const initialDay = document.querySelector('input[name="selectedDay"]:checked');
+    if (initialDay) {
+        updateTicketAvailability(initialDay.value);
+    }
 </script>
 
 <%- include('../partials/footer') %>

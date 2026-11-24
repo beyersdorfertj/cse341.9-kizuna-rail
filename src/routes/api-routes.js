@@ -3,6 +3,7 @@ import { getAllTrains } from '../controllers/trains.js';
 import { getSchedulesForTrip } from '../controllers/schedules.js';
 import { getAllBookings } from '../controllers/bookings.js';
 import { getAllTrips, getTripById } from '../controllers/trips.js';
+import { getAllTicketClasses } from '../controllers/ticket-classes.js';
 
 const router = Router();
 
@@ -20,5 +21,8 @@ router.get('/trips/:id', getTripById);
 
 // Feature Set 3: Bookings
 router.get('/bookings', getAllBookings);
+
+// Feature Set 4: Ticket Classes (optional ?day= filter handled in the controller)
+router.get('/ticket-classes', getAllTicketClasses);
 
 export default router;
