@@ -11,59 +11,116 @@
     </header>
 
     <section class="bookings-catalog">
+        <select id="ticket-class-options" hidden>
+            <% ticketClasses.forEach((ticketClass) => { %>
+                <option value="<%= ticketClass.class %>"><%= ticketClass.name %></option>
+            <% }); %>
+        </select>
+
+        <div id="schedule-day-options" hidden>
+            <% schedules.forEach((schedule) => { %>
+                <select data-schedule-id="<%= schedule.id %>">
+                    <% (schedule.daysOfWeek || []).forEach((day) => { %>
+                        <option value="<%= day %>"><%= day %></option>
+                    <% }); %>
+                </select>
+            <% }); %>
+        </div>
+
         <div class="bookings-state" id="bookings-loading">
             Loading bookings...
         </div>
-    
+
         <div class="bookings-state bookings-error" id="bookings-error" hidden></div>
-    
+
         <div class="bookings-grid" id="bookings-list"></div>
-    
+
         <template id="booking-card-template">
-            <article class="booking-card">
+            <article class="booking-card" data-booking-id="">
                 <header class="booking-card-header">
                     <h3 data-field="id"></h3>
-                    <span class="booking-class" data-field="ticketClass">Ticket Class: </span>
+                    <span data-field="ticketClass"></span>
                 </header>
-        
+
                 <div class="booking-details">
-                    <p class="detail-row">
-                        <strong>Trip ID:</strong>
-                        <span data-field="tripId"></span>
-                    </p>
-        
-                    <p class="detail-row">
-                        <strong>Schedule ID:</strong>
-                        <span data-field="scheduleId"></span>
-                    </p>
-        
-                    <p class="detail-row">
-                        <strong>Travel Day:</strong>
-                        <span data-field="selectedDay"></span>
-                    </p>
-        
-                    <p class="detail-row">
-                        <strong>Passengers:</strong>
-                        <span data-field="passengerCount"></span>
-                    </p>
-        
-                    <p class="detail-row">
-                        <strong>Created:</strong>
-                        <span data-field="createdAt"></span>
-                    </p>
+                    <p>Trip ID: <span data-field="tripId"></span></p>
+                    <p>Schedule ID: <span data-field="scheduleId"></span></p>
+                    <p>Travel Day: <span data-field="selectedDay"></span></p>
+                    <p>Passengers: <span data-field="passengerCount"></span></p>
+                    <p>Created: <span data-field="createdAt"></span></p>
                 </div>
+
+                <button type="button" data-action="edit">Edit</button>
+                <button type="button" data-action="delete">Delete</button>
             </article>
         </template>
+
+        <template id="booking-edit-template">
+            <header class="booking-edit-header">
+                <h2 data-field="edit-title"></h2>
+            </header>
+            <form class="booking-edit-form" data-booking-id="">
+                <label>
+                    Ticket class
+                    <input name="ticketClass" required>
+                </label>
+
+                <label>
+                    Travel day
+                    <input name="selectedDay" required>
+                </label>
+
+                <button type="submit">Save</button>
+                <button type="button" data-action="cancel">Cancel</button>
+            </form>
+        </template>
+
+        <p id="bookings-message" role="status"></p>
     </section>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bookingsList = document.getElementById('bookings-list');
             const loadingElement = document.getElementById('bookings-loading');
             const errorElement = document.getElementById('bookings-error');
-            const bookingsList = document.getElementById('bookings-list');
-            const template = document.getElementById('booking-card-template');
+            const messageElement = document.getElementById('bookings-message');
+            const cardTemplate = document.getElementById('booking-card-template');
+            const editTemplate = document.getElementById('booking-edit-template');
 
-            try {
+            let bookingsById = new Map();
+
+            function renderBookings() {
+                const fragment = document.createDocumentFragment();
+
+                for (const booking of bookingsById.values()) {
+                    const card = cardTemplate.content.cloneNode(true);
+                    const article = card.querySelector('[data-booking-id]');
+
+                    article.dataset.bookingId = booking.id;
+                    card.querySelector('[data-field="id"]').textContent =
+                        `Booking ID: ${booking.id}`;
+                    card.querySelector('[data-field="ticketClass"]').textContent =
+                        `Ticket Class: ${booking.ticketClass}`;
+                    card.querySelector('[data-field="tripId"]').textContent =
+                        booking.tripId;
+                    card.querySelector('[data-field="scheduleId"]').textContent =
+                        booking.scheduleId;
+                    card.querySelector('[data-field="selectedDay"]').textContent =
+                        booking.selectedDay;
+                    card.querySelector('[data-field="passengerCount"]').textContent =
+                        booking.passengers?.length || 0;
+                    card.querySelector('[data-field="createdAt"]').textContent =
+                        booking.createdAt
+                            ? new Date(booking.createdAt).toLocaleDateString()
+                            : 'N/A';
+
+                    fragment.append(card);
+                }
+
+                bookingsList.replaceChildren(fragment);
+            }
+
+            async function loadBookings() {
                 const response = await fetch('/api/bookings');
 
                 if (!response.ok) {
@@ -71,43 +128,125 @@
                 }
 
                 const data = await response.json();
-                const bookings = data.bookings || data;
+                const bookings = Array.isArray(data) ? data : data.bookings || [];
 
-                loadingElement.hidden = true;
-
-                bookings.forEach((booking) => {
-                    const clone = template.content.cloneNode(true);
-
-                    clone.querySelector('[data-field="id"]').textContent =
-                        `Booking ID: ${booking.id}`;
-
-                    clone.querySelector('[data-field="ticketClass"]').textContent =
-                        `Ticket Class: ${booking.ticketClass}`;
-
-                    clone.querySelector('[data-field="tripId"]').textContent =
-                        booking.tripId;
-
-                    clone.querySelector('[data-field="scheduleId"]').textContent =
-                        booking.scheduleId;
-
-                    clone.querySelector('[data-field="selectedDay"]').textContent =
-                        booking.selectedDay;
-
-                    clone.querySelector('[data-field="passengerCount"]').textContent =
-                        booking.passengers?.length || 0;
-
-                    clone.querySelector('[data-field="createdAt"]').textContent =
-                        booking.createdAt
-                            ? new Date(booking.createdAt).toLocaleDateString()
-                            : 'N/A';
-
-                    bookingsList.appendChild(clone);
-                });
-            } catch (error) {
-                loadingElement.hidden = true;
-                errorElement.hidden = false;
-                errorElement.textContent = error.message;
+                bookingsById = new Map(bookings.map((booking) => [booking.id, booking]));
+                renderBookings();
             }
+
+            function showEditor(card, booking) {
+                const editor = editTemplate.content.cloneNode(true);
+                const form = editor.querySelector('form');
+                editor.querySelector('[data-field="edit-title"]').textContent =
+                    `Editing Booking: ${booking.id}`;
+
+                form.dataset.bookingId = booking.id;
+                const ticketClassOptions = document.querySelector('#ticket-class-options');
+                form.elements.ticketClass.replaceChildren(
+                    ...Array.from(ticketClassOptions.options, (option) => option.cloneNode(true))
+                );
+
+                const scheduleOptions = document.querySelector(
+                    `#schedule-day-options select[data-schedule-id="${booking.scheduleId}"]`
+                );
+                if (scheduleOptions) {
+                    form.elements.selectedDay.replaceChildren(
+                        ...Array.from(scheduleOptions.options, (option) => option.cloneNode(true))
+                    );
+                } else {
+                    form.elements.selectedDay.disabled = true;
+                }
+                form.elements.ticketClass.value = booking.ticketClass;
+                form.elements.selectedDay.value = booking.selectedDay;
+
+                bookingsList.replaceChildren(editor);
+                form.elements.ticketClass.focus();
+            }
+
+            async function saveBooking(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const updates = Object.fromEntries(new FormData(form));
+
+                const response = await fetch(
+                    `/api/bookings/${form.dataset.bookingId}`,
+                    {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updates),
+                    }
+                );
+
+                if (!response.ok) {
+                    messageElement.textContent = 'The booking could not be updated.';
+                    return;
+                }
+
+                const updatedBooking = await response.json();
+                bookingsById.set(updatedBooking.id, updatedBooking);
+                renderBookings();
+                messageElement.textContent = 'Booking updated.';
+            }
+
+            async function deleteBooking(booking) {
+                if (!window.confirm(`Delete booking ${booking.id}?`)) {
+                    return;
+                }
+
+                const response = await fetch(
+                    `/api/bookings/${booking.id}`,
+                    { method: 'DELETE' }
+                );
+
+                if (!response.ok) {
+                    messageElement.textContent = 'The booking could not be deleted.';
+                    return;
+                }
+
+                bookingsById.delete(booking.id);
+                renderBookings();
+                messageElement.textContent = 'Booking deleted.';
+            }
+
+            bookingsList.addEventListener('click', async (event) => {
+                const button = event.target.closest('button[data-action]');
+
+                if (!button) {
+                    return;
+                }
+
+                const card = button.closest('[data-booking-id]');
+
+                if (button.dataset.action === 'cancel') {
+                    renderBookings();
+                    return;
+                }
+
+                const booking = bookingsById.get(card.dataset.bookingId);
+
+                if (button.dataset.action === 'edit') {
+                    showEditor(card, booking);
+                } else if (button.dataset.action === 'delete') {
+                    await deleteBooking(booking);
+                }
+            });
+
+            bookingsList.addEventListener('submit', async (event) => {
+                if (event.target.matches('.booking-edit-form')) {
+                    await saveBooking(event);
+                }
+            });
+
+            loadBookings()
+                .then(() => {
+                    loadingElement.hidden = true;
+                })
+                .catch((error) => {
+                    loadingElement.hidden = true;
+                    errorElement.hidden = false;
+                    errorElement.textContent = error.message;
+                });
         });
     </script>
 
