@@ -92,10 +92,22 @@ export const bookingPage = async (req, res, next) => {
     }
 };
 
-export const bookingsAdminPage = async (req, res) => {
-    res.render('bookings', {
-        title: 'Bookings Admin'
-    });
+export const bookingsAdminPage = async (req, res, next) => {
+    try {
+        const db = getDb();
+        const [ticketClasses, schedules] = await Promise.all([
+            db.collection('ticketClasses').find({}).sort({ class: 1 }).toArray(),
+            db.collection('schedules').find({}, { projection: { id: 1, daysOfWeek: 1 } }).toArray()
+        ]);
+
+        return res.render('bookings', {
+            title: 'Bookings Admin',
+            ticketClasses,
+            schedules
+        });
+    } catch (error) {
+        return next(error);
+    }
 };
 
 export const confirmationPage = async (req, res, next) => {
@@ -129,16 +141,36 @@ export const updateBooking = async (req, res) => {
 
         const updates = {};
 
-        for (const field of ['ticketClass', 'selectedDay']) {
-            if (req.body[field] !== undefined) {
-                if (typeof req.body[field] !== 'string' || !req.body[field].trim()) {
-                    return res.status(400).json({
-                        message: `Invalid value for ${field}`,
-                    });
-                }
-
-                updates[field] = req.body[field].trim();
+        if (req.body.ticketClass !== undefined) {
+            const ticketClass = req.body.ticketClass;
+            if (typeof ticketClass !== 'string' || !ticketClass.trim()) {
+                return res.status(400).json({ message: 'Invalid value for ticketClass' });
             }
+
+            const db = getDb();
+            const validTicketClass = await db.collection('ticketClasses').findOne({
+                class: ticketClass.trim()
+            });
+            if (!validTicketClass) {
+                return res.status(400).json({ message: 'Invalid value for ticketClass' });
+            }
+
+            updates.ticketClass = ticketClass.trim();
+        }
+
+        if (req.body.selectedDay !== undefined) {
+            const selectedDay = req.body.selectedDay;
+            if (typeof selectedDay !== 'string' || !selectedDay.trim()) {
+                return res.status(400).json({ message: 'Invalid value for selectedDay' });
+            }
+
+            const db = getDb();
+            const schedule = await db.collection('schedules').findOne({ id: booking.scheduleId });
+            if (!schedule?.daysOfWeek?.includes(selectedDay.trim())) {
+                return res.status(400).json({ message: 'Invalid value for selectedDay' });
+            }
+
+            updates.selectedDay = selectedDay.trim();
         }
 
         if (Object.keys(updates).length === 0) {
