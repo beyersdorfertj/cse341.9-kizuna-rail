@@ -11,7 +11,7 @@ const hookRegionSorter = () => {
             } else {
                 url.searchParams.delete('region');
             }
-            
+
             window.location.href = url.toString();
         });
     }
@@ -29,7 +29,7 @@ const hookSeasonSorter = () => {
             } else {
                 url.searchParams.delete('season');
             }
-            
+
             window.location.href = url.toString();
         });
     }
@@ -304,9 +304,9 @@ const hookTripsCatalog = async () => {
     }
 };
 
+
 const hookUserBookings = async () => {
     const listEl = document.getElementById('bookings-list');
-    const loadingEl = document.getElementById('bookings-loading');
 
     if (!listEl) {
         return;
@@ -321,10 +321,6 @@ const hookUserBookings = async () => {
 
         const bookings = await response.json();
         listEl.replaceChildren();
-
-        if (loadingEl) {
-            loadingEl.hidden = true;
-        }
 
         if (!Array.isArray(bookings) || bookings.length === 0) {
             const emptyMessage = document.createElement('p');
@@ -364,10 +360,6 @@ const hookUserBookings = async () => {
         });
     } catch (error) {
         console.error('Failed to load user bookings:', error);
-
-        if (loadingEl) {
-            loadingEl.hidden = true;
-        }
 
         listEl.replaceChildren();
 

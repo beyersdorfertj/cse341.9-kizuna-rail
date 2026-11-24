@@ -59,6 +59,30 @@
     text-align: center;
 }
 
+/* Individual booking cards */
+.dashboard-booking-card {
+    padding: var(--space-lg);
+    background-color: var(--clr-surface-alt);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard-booking-card h3 {
+    color: var(--clr-primary);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-sm);
+}
+
+.dashboard-booking-card p {
+    color: var(--clr-text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.dashboard-booking-card p:last-child {
+    margin-bottom: 0;
+}
+
 .dashboard-links-grid {
     display: grid;
     grid-template-columns: 1fr;

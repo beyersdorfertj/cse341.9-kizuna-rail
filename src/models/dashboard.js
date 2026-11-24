@@ -12,8 +12,11 @@ export async function getUserBookings(userId) {
         throw new Error('User not found');
     }
 
+    const escapedEmail = currentUser.email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const emailRegex = new RegExp(`^${escapedEmail}$`, 'i');
+
     const bookings = await booking.find({
-        'passengers.email': currentUser.email
+        'passengers.email': { $regex: emailRegex }
     })
         .select('id tripId scheduleId ticketClass selectedDay createdAt')
         .lean();
