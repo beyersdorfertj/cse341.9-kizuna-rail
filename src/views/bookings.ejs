@@ -11,6 +11,22 @@
     </header>
 
     <section class="bookings-catalog">
+        <select id="ticket-class-options" hidden>
+            <% ticketClasses.forEach((ticketClass) => { %>
+                <option value="<%= ticketClass.class %>"><%= ticketClass.name %></option>
+            <% }); %>
+        </select>
+
+        <div id="schedule-day-options" hidden>
+            <% schedules.forEach((schedule) => { %>
+                <select data-schedule-id="<%= schedule.id %>">
+                    <% (schedule.daysOfWeek || []).forEach((day) => { %>
+                        <option value="<%= day %>"><%= day %></option>
+                    <% }); %>
+                </select>
+            <% }); %>
+        </div>
+
         <div class="bookings-state" id="bookings-loading">
             Loading bookings...
         </div>
@@ -125,6 +141,21 @@
                     `Editing Booking: ${booking.id}`;
 
                 form.dataset.bookingId = booking.id;
+                const ticketClassOptions = document.querySelector('#ticket-class-options');
+                form.elements.ticketClass.replaceChildren(
+                    ...Array.from(ticketClassOptions.options, (option) => option.cloneNode(true))
+                );
+
+                const scheduleOptions = document.querySelector(
+                    `#schedule-day-options select[data-schedule-id="${booking.scheduleId}"]`
+                );
+                if (scheduleOptions) {
+                    form.elements.selectedDay.replaceChildren(
+                        ...Array.from(scheduleOptions.options, (option) => option.cloneNode(true))
+                    );
+                } else {
+                    form.elements.selectedDay.disabled = true;
+                }
                 form.elements.ticketClass.value = booking.ticketClass;
                 form.elements.selectedDay.value = booking.selectedDay;
 
