@@ -4,6 +4,7 @@ import { getAllTrains } from '../controllers/trains.js';
 import { getSchedulesForTrip } from '../controllers/schedules.js';
 import { getAllBookings, updateBooking, deleteBooking } from '../controllers/bookings.js';
 import { getAllTrips, getTripById } from '../controllers/trips.js';
+import { deleteUser, getUsers, updateUser } from '../controllers/users.js';
 
 const router = Router();
 
@@ -23,5 +24,10 @@ router.get('/trips/:id', getTripById);
 router.get('/bookings', requireApiLogin, getAllBookings);
 router.put('/bookings/:id', requireApiLogin, updateBooking);
 router.delete('/bookings/:id', requireApiLogin, deleteBooking);
+
+// Feature Set 3: User management
+router.get('/users', requireApiLogin, getUsers);
+router.put('/users/:id', requireApiLogin, updateUser);
+router.delete('/users/:id', requireApiLogin, deleteUser);
 
 export default router;
