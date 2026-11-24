@@ -5,7 +5,6 @@ import { getSchedulesForTrip } from '../controllers/schedules.js';
 import { getAllBookings, updateBooking, deleteBooking } from '../controllers/bookings.js';
 import { getAllTrips, getTripById } from '../controllers/trips.js';
 import { deleteUser, getUsers, updateUser } from '../controllers/users.js';
-import { requireApiLogin } from '../middleware/auth.js';
 
 const router = Router();
 
