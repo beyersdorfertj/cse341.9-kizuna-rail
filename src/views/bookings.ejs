@@ -27,6 +27,42 @@
             <% }); %>
         </div>
 
+        <form id="booking-filters" class="booking-filters">
+            <label>
+                Booking ID
+                <input
+                    type="search"
+                    name="q"
+                    placeholder="Enter booking ID prefix"
+                    maxlength="100"
+                >
+            </label>
+
+            <label>
+                Ticket class
+                <select name="ticketClass">
+                    <option value="">All ticket classes</option>
+                    <% ticketClasses.forEach((ticketClass) => { %>
+                        <option value="<%= ticketClass.class %>">
+                            <%= ticketClass.name %>
+                        </option>
+                    <% }); %>
+                </select>
+            </label>
+
+            <label>
+                Trip ID
+                <input
+                    type="text"
+                    name="tripId"
+                    placeholder="Enter exact trip ID"
+                >
+            </label>
+
+            <button type="submit">Search bookings</button>
+            <button type="reset" id="clear-booking-filters">Clear filters</button>
+        </form>
+
         <div class="bookings-state" id="bookings-loading">
             Loading bookings...
         </div>
@@ -95,6 +131,7 @@
             const previousPageButton = document.getElementById('previous-page');
             const nextPageButton = document.getElementById('next-page');
             const pageInfo = document.getElementById('page-info');
+            const bookingFilters = document.getElementById('booking-filters');
 
             let bookingsById = new Map();
             let currentPage = 1;
@@ -143,8 +180,23 @@
                 nextPageButton.disabled = true;
 
                 try {
+                    const params = new URLSearchParams({
+                        page: currentPage,
+                        limit: pageLimit
+                    });
+
+                    const filters = new FormData(bookingFilters);
+
+                    for (const field of ['q', 'ticketClass', 'tripId']) {
+                        const value = String(filters.get(field) || '').trim();
+
+                        if (value) {
+                            params.set(field, value);
+                        }
+                    }
+
                     const response = await fetch(
-                        `/api/bookings?page=${currentPage}&limit=${pageLimit}`
+                        `/api/bookings?${params.toString()}`
                     );
 
                     if (!response.ok) {
@@ -277,6 +329,19 @@
                 if (event.target.matches('.booking-edit-form')) {
                     await saveBooking(event);
                 }
+            });
+
+            bookingFilters.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                currentPage = 1;
+                messageElement.textContent = '';
+                await loadBookings();
+            });
+
+            bookingFilters.addEventListener('reset', () => {
+                currentPage = 1;
+                messageElement.textContent = '';
+                setTimeout(() => loadBookings(), 0);
             });
 
             previousPageButton.addEventListener('click', async () => {

@@ -165,6 +165,138 @@ describe('GET /api/bookings pagination', () => {
         expect(response.body).toHaveProperty('message');
     });
 
+    test('searches booking IDs using a case-insensitive prefix', async () => {
+        await Booking.insertMany([
+            bookingData('JRABC123'),
+            bookingData('OTHER123')
+        ]);
+
+        const response = await adminAgent.get('/api/bookings?q=jrabc');
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.map((booking) => booking.id)).toEqual([
+            'JRABC123'
+        ]);
+        expect(response.body.query).toEqual({ q: 'jrabc' });
+        expect(response.body.pagination.totalItems).toBe(1);
+    });
+
+    test('filters bookings by exact ticket class', async () => {
+        await Booking.insertMany([
+            bookingData('standard-booking', { ticketClass: 'standard' }),
+            bookingData('premium-booking', { ticketClass: 'premium' })
+        ]);
+
+        const response = await adminAgent.get(
+            '/api/bookings?ticketClass=premium'
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.map((booking) => booking.id)).toEqual([
+            'premium-booking'
+        ]);
+        expect(response.body.query).toEqual({ ticketClass: 'premium' });
+        expect(response.body.pagination.totalItems).toBe(1);
+    });
+
+    test('filters bookings by exact trip ID', async () => {
+        await Booking.insertMany([
+            bookingData('tokyo-booking', { tripId: 'tokyo-osaka' }),
+            bookingData('kyoto-booking', { tripId: 'kyoto-nara' })
+        ]);
+
+        const response = await adminAgent.get(
+            '/api/bookings?tripId=tokyo-osaka'
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.map((booking) => booking.id)).toEqual([
+            'tokyo-booking'
+        ]);
+        expect(response.body.query).toEqual({ tripId: 'tokyo-osaka' });
+    });
+
+    test('combines search and filters with pagination', async () => {
+        await Booking.insertMany([
+            bookingData('JRABC001', {
+                tripId: 'tokyo-osaka',
+                ticketClass: 'premium',
+                createdAt: new Date('2026-01-01T10:00:00Z')
+            }),
+            bookingData('JRABC002', {
+                tripId: 'tokyo-osaka',
+                ticketClass: 'premium',
+                createdAt: new Date('2026-01-02T10:00:00Z')
+            }),
+            bookingData('JRABC003', {
+                tripId: 'tokyo-osaka',
+                ticketClass: 'standard'
+            }),
+            bookingData('OTHER001', {
+                tripId: 'tokyo-osaka',
+                ticketClass: 'premium'
+            })
+        ]);
+
+        const response = await adminAgent.get(
+            '/api/bookings?q=JRABC&ticketClass=premium&tripId=tokyo-osaka&page=1&limit=1'
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.body.data).toHaveLength(1);
+        expect(response.body.data[0].id).toBe('JRABC002');
+        expect(response.body.query).toEqual({
+            q: 'JRABC',
+            ticketClass: 'premium',
+            tripId: 'tokyo-osaka'
+        });
+        expect(response.body.pagination.totalItems).toBe(2);
+        expect(response.body.pagination.totalPages).toBe(2);
+    });
+
+    test.each([
+        'ticketClass=unknown',
+        'ticketClass=',
+        'tripId=',
+        'q=',
+        `q=${'a'.repeat(101)}`
+    ])('rejects invalid search or filter parameter: %s', async (parameters) => {
+        const response = await adminAgent.get(
+            `/api/bookings?${parameters}`
+        );
+
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('message');
+    });
+
+    test('keeps passenger email restrictions when search filters are used', async () => {
+        await Booking.insertMany([
+            bookingData('JRABC001', {
+                email: 'passenger@example.com',
+                ticketClass: 'premium'
+            }),
+            bookingData('JRABC002', {
+                email: 'other@example.com',
+                ticketClass: 'premium'
+            })
+        ]);
+
+        const passengerAgent = await createAccount(
+            'user',
+            'passenger@example.com'
+        );
+
+        const response = await passengerAgent.get(
+            '/api/bookings?q=JRABC&ticketClass=premium'
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.map((booking) => booking.id)).toEqual([
+            'JRABC001'
+        ]);
+        expect(response.body.pagination.totalItems).toBe(1);
+    });
+
     test('allows admins to see bookings belonging to different passengers', async () => {
         await Booking.insertMany([
             bookingData('booking-one', { email: 'one@example.com' }),

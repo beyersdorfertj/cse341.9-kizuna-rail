@@ -232,8 +232,8 @@
  * @openapi
  * /api/bookings:
  *   get:
- *     summary: List bookings with pagination
- *     description: Returns paginated bookings. Administrators can view all bookings; other signed-in users can view bookings associated with their email address.
+ *     summary: List, search, and filter bookings with pagination
+ *     description: Returns paginated bookings with optional search and filters. Booking ID search is a case-insensitive prefix match. Ticket class and trip ID are exact matches. Administrators can view all bookings; other signed-in users can view bookings associated with their email address.
  *     tags:
  *       - Bookings
  *     parameters:
@@ -253,6 +253,27 @@
  *           maximum: 50
  *           default: 10
  *       - in: query
+ *         name: q
+ *         description: Optional case-insensitive prefix search on booking ID (1–100 characters).
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 100
+ *           example: JRABC
+ *       - in: query
+ *         name: ticketClass
+ *         description: Optional exact ticket-class filter. Must match an existing ticket class.
+ *         schema:
+ *           type: string
+ *           example: premium
+ *       - in: query
+ *         name: tripId
+ *         description: Optional exact trip ID filter.
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *           example: alpine-panorama
+ *       - in: query
  *         name: sort
  *         description: Field used to sort the results.
  *         schema:
@@ -268,7 +289,7 @@
  *           default: desc
  *     responses:
  *       200:
- *         description: Paginated bookings and pagination metadata.
+ *         description: Bookings, applied search and filter parameters, and pagination metadata.
  *         content:
  *           application/json:
  *             schema:
@@ -310,6 +331,19 @@
  *                       createdAt:
  *                         type: string
  *                         format: date-time
+ *                 query:
+ *                   type: object
+ *                   description: Search and filter parameters applied to this result.
+ *                   properties:
+ *                     q:
+ *                       type: string
+ *                       example: JRABC
+ *                     ticketClass:
+ *                       type: string
+ *                       example: premium
+ *                     tripId:
+ *                       type: string
+ *                       example: alpine-panorama
  *                 pagination:
  *                   type: object
  *                   properties:
@@ -332,7 +366,7 @@
  *                       type: boolean
  *                       example: false
  *       400:
- *         description: Invalid pagination or sorting parameters.
+ *         description: Invalid pagination, sorting, search, or filter parameters.
  *       401:
  *         description: Authentication required.
  *       403:

@@ -69,9 +69,81 @@ export const getAllBookings = async (req, res) => {
             return res.status(400).json({ message: 'Invalid sort order.' });
         }
 
+        const query = {};
+
+        if (req.query.q !== undefined) {
+            if (
+                typeof req.query.q !== 'string' ||
+                req.query.q.trim().length < 1 ||
+                req.query.q.trim().length > 100
+            ) {
+                return res.status(400).json({
+                    message: 'Search query must be between 1 and 100 characters.'
+                });
+            }
+
+            query.q = req.query.q.trim();
+        }
+
+        if (req.query.ticketClass !== undefined) {
+            if (
+                typeof req.query.ticketClass !== 'string' ||
+                !req.query.ticketClass.trim()
+            ) {
+                return res.status(400).json({
+                    message: 'Invalid ticket class.'
+                });
+            }
+
+            const ticketClass = req.query.ticketClass.trim();
+            const db = getDb();
+            const validTicketClass = await db.collection('ticketClasses').findOne({
+                class: ticketClass
+            });
+
+            if (!validTicketClass) {
+                return res.status(400).json({
+                    message: 'Invalid ticket class.'
+                });
+            }
+
+            query.ticketClass = ticketClass;
+        }
+
+        if (req.query.tripId !== undefined) {
+            if (
+                typeof req.query.tripId !== 'string' ||
+                req.query.tripId.trim().length === 0
+            ) {
+                return res.status(400).json({
+                    message: 'Trip ID must be a non-empty string.'
+                });
+            }
+
+            query.tripId = req.query.tripId.trim();
+        }
+
+        // Status and travel-date filters are deferred until those fields
+        // are added to the booking schema.
+        // TODO: Add status allowlist validation when booking status exists.
+        // TODO: Add travelDateAfter/travelDateBefore validation when travelDate exists.
+
         const filter = role === 'admin'
             ? {}
             : { 'passengers.email': normalizedEmail };
+
+        if (query.q) {
+            const escapedSearch = query.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            filter.id = { $regex: `^${escapedSearch}`, $options: 'i' };
+        }
+
+        if (query.ticketClass) {
+            filter.ticketClass = query.ticketClass;
+        }
+
+        if (query.tripId) {
+            filter.tripId = query.tripId;
+        }
 
         const { bookings, totalItems } = await getPaginatedBookings({
             filter,
@@ -85,6 +157,7 @@ export const getAllBookings = async (req, res) => {
 
         return res.status(200).json({
             data: bookings,
+            query,
             pagination: {
                 page,
                 limit,
