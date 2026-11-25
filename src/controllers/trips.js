@@ -7,7 +7,7 @@ import {
 import { getDb } from "../db/connect.js";
 
 const ALLOWED_SORT = ["name", "distance", "region", "bestSeason"];
-const ALLOWD_ORDER = ["asc", "desc"];
+const ALLOWED_ORDER = ["asc", "desc"];
 
 // GET /api/trips
 export async function getAllTrips(req, res) {
