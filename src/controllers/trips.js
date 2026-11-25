@@ -1,16 +1,54 @@
 
 import {
-  getAllTrips as findAllTrips,
+  getPaginatedTrips,
   getTripById as findTripById,
 } from "../models/trips.js";
 
 import { getDb } from "../db/connect.js";
 
+const ALLOWED_SORT = ["name", "distance", "region", "bestSeason"];
+const ALLOWD_ORDER = ["asc", "desc"];
+
 // GET /api/trips
 export async function getAllTrips(req, res) {
+  const errors = [];
+
+  const { page = 1, limit = 10, sort = "name", order = "asc" } = req.query;
+
+  if (!Number.isInteger(Number(page)) || Number(page) < 1) {
+    errors.push({ field: 'page', message: "page must be a positive integer." });
+  }
+  if (!Number.isInteger(Number(limit)) || limit < 1 || limit > 50) {
+    errors.push({ field: 'limit', message: "limit must be an integer between 1 and 50." });
+  }
+  if (!ALLOWED_SORT.includes(sort)) {
+    errors.push({ field: 'sort', message: "Invalid sort field." });
+  }
+  if (!ALLOWED_ORDER.includes(order)) {
+    errors.push({ field: 'order', message: "Sort order must be 'asc' or 'desc'." });
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  const pageNum = Number(page);
+  const limitNum = Number(limit);
+
   try {
-    const trips = await findAllTrips();
-    return res.status(200).json(trips);
+    const { trips, totalItems } = await getPaginatedTrips({ page: pageNum, limit: limitNum, sort, order });
+    const totalPages = Math.ceil(totalItems / limitNum);
+    return res.status(200).json({
+      data: trips,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1
+      }
+    });
   } catch (error) {
     console.error("Failed to retrieve trips:", error);
     return res.status(500).json({
