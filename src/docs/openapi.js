@@ -85,18 +85,48 @@
  * @openapi
  * /api/trips:
  *   get:
- *     summary: Retrieve all trips
+ *     summary: List trips (paginated)
  *     tags:
  *       - Trips
+ *     parameters:
+ *      - in: query
+ *        name: page
+ *        schema: { type: integer, minimum: 1, default: 1 }
+ *        description: Page number for pagination
+ *      - in: query
+ *        name: limit
+ *        schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+ *        description: Number of items per page
+ *      - in: query
+ *        name: sort
+ *        schema: { type: string, enum: [name, distance, region, bestSeason], default: "name" }
+ *        description: Field to sort by
+ *      - in: query
+ *        name: order
+ *        schema: { type: string, enum: [asc, desc], default: "asc" }
+ *        description: Sort order
  *     responses:
  *       '200':
- *         description: Successfully retrieved all trips
+ *         description: Paginated list of trips
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Trip'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Trip' }
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page: { type: number, example: 1 }
+ *                     limit: { type: number, example: 10 }
+ *                     totalItems: { type: number, example: 100 }
+ *                     totalPages: { type: number, example: 10 }
+ *                     hasNextPage: { type: boolean, example: true }
+ *                     hasPreviousPage: { type: boolean, example: false }
+ *       '400':
+ *         description: Invalid pagination parameters
  *       '500':
  *         description: Internal server error
  */
