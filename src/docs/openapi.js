@@ -232,53 +232,113 @@
  * @openapi
  * /api/bookings:
  *   get:
- *     summary: List all bookings
- *     description: Returns every booking stored in the database.
+ *     summary: List bookings with pagination
+ *     description: Returns paginated bookings. Administrators can view all bookings; other signed-in users can view bookings associated with their email address.
  *     tags:
  *       - Bookings
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         description: Page number (starts at 1).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         description: Number of bookings per page (maximum 50).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *       - in: query
+ *         name: sort
+ *         description: Field used to sort the results.
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, tripId, ticketClass, scheduleId]
+ *           default: createdAt
+ *       - in: query
+ *         name: order
+ *         description: Sort direction.
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
  *     responses:
  *       200:
- *         description: A JSON array containing the list of bookings.
+ *         description: Paginated bookings and pagination metadata.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     example: JRABC12345
- *                   scheduleId:
- *                     type: number
- *                     example: 1
- *                   tripId:
- *                     type: string
- *                     example: alpine-panorama
- *                   ticketClass:
- *                     type: string
- *                     example: premium
- *                   selectedDay:
- *                     type: string
- *                     example: monday
- *                   passengers:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         firstName:
- *                           type: string
- *                         lastName:
- *                           type: string
- *                         email:
- *                           type: string
- *                         phone:
- *                           type: string
- *                   createdAt:
- *                     type: string
- *                     format: date-time
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: JRABC12345
+ *                       scheduleId:
+ *                         type: number
+ *                         example: 1
+ *                       tripId:
+ *                         type: string
+ *                         example: alpine-panorama
+ *                       ticketClass:
+ *                         type: string
+ *                         example: premium
+ *                       selectedDay:
+ *                         type: string
+ *                         example: monday
+ *                       passengers:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             firstName:
+ *                               type: string
+ *                             lastName:
+ *                               type: string
+ *                             email:
+ *                               type: string
+ *                             phone:
+ *                               type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalItems:
+ *                       type: integer
+ *                       example: 25
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPreviousPage:
+ *                       type: boolean
+ *                       example: false
+ *       400:
+ *         description: Invalid pagination or sorting parameters.
+ *       401:
+ *         description: Authentication required.
+ *       403:
+ *         description: Account email is required for non-admin users.
  *       500:
- *         description: Internal server error
+ *         description: Internal server error.
  */
 
 /**

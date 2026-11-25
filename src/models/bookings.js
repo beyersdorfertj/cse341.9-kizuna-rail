@@ -34,3 +34,16 @@ export async function updateBookingById(bookingId, updates) {
 export async function deleteBookingById(bookingId) {
     return Booking.findOneAndDelete({ id: bookingId }).lean();
 }
+
+
+export async function getPaginatedBookings({ filter = {}, page, limit, sort, order }) {
+    const skip = (page - 1) * limit;
+    const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
+
+    const [bookings, totalItems] = await Promise.all([
+        Booking.find(filter).sort(sortOptions).skip(skip).limit(limit).lean(),
+        Booking.countDocuments(filter)
+    ]);
+
+    return { bookings, totalItems };
+}
