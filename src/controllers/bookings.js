@@ -1,8 +1,7 @@
 import {
-    getAllBookings as FindAllBookings,
+    getPaginatedBookings,
     createBooking,
     getBookingById,
-    getBookingsByPassengerEmail,
     updateBookingById,
     deleteBookingById
 } from '../models/bookings.js';
@@ -26,13 +25,77 @@ export const getAllBookings = async (req, res) => {
         const { role, email } = req.session.user;
         const normalizedEmail = email?.trim().toLowerCase();
 
-        const bookings = role === 'admin'
-            ? await FindAllBookings()
-            : await getBookingsByPassengerEmail(normalizedEmail);
-        
-        return res.status(200).json( bookings );
+        if (role !== 'admin' && !normalizedEmail) {
+            return res.status(403).json({ message: 'Account email is required.' });
+        }
+
+        const parseInteger = (value, defaultValue, minimum, maximum = Number.MAX_SAFE_INTEGER) => {
+            if (value === undefined) {
+                return defaultValue;
+            }
+
+            if (typeof value !== 'string' || !/^\d+$/.test(value)) {
+                return null;
+            }
+
+            const parsed = Number(value);
+
+            if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
+                return null;
+            }
+
+            return parsed;
+        };
+
+        const page = parseInteger(req.query.page, 1, 1);
+        const limit = parseInteger(req.query.limit, 10, 1, 50);
+
+        if (page === null || limit === null) {
+            return res.status(400).json({
+                message: 'Page must be a positive integer and limit must be between 1 and 50.'
+            });
+        }
+
+        const allowedSortFields = ['createdAt', 'tripId', 'ticketClass', 'scheduleId'];
+        const sort = req.query.sort === undefined ? 'createdAt' : req.query.sort;
+
+        if (typeof sort !== 'string' || !allowedSortFields.includes(sort)) {
+            return res.status(400).json({ message: 'Invalid sort field.' });
+        }
+
+        const order = req.query.order === undefined ? 'desc' : req.query.order;
+
+        if (typeof order !== 'string' || !['asc', 'desc'].includes(order)) {
+            return res.status(400).json({ message: 'Invalid sort order.' });
+        }
+
+        const filter = role === 'admin'
+            ? {}
+            : { 'passengers.email': normalizedEmail };
+
+        const { bookings, totalItems } = await getPaginatedBookings({
+            filter,
+            page,
+            limit,
+            sort,
+            order
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return res.status(200).json({
+            data: bookings,
+            pagination: {
+                page,
+                limit,
+                totalItems,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPreviousPage: page > 1
+            }
+        });
     } catch (error) {
-        console.error('Error fetching all bookings:', error);
+        console.error('Error fetching bookings:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
