@@ -134,59 +134,245 @@
  *                   example: Trip not found
  *       '500':
  *         description: Internal server error
+ *   put:
+ *     summary: Update an existing trip
+ *     description: Admin only. Updates editable fields of an existing trip.
+ *     tags:
+ *       - Trips
+ *     security:
+ *       - sessionAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Unique trip ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               region:
+ *                 type: string
+ *               startStation:
+ *                 type: string
+ *               endStation:
+ *                 type: string
+ *               duration:
+ *                 type: string
+ *               distance:
+ *                 type: number
+ *                 minimum: 0
+ *               highlights:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               bestSeason:
+ *                 type: string
+ *               operatingMonths:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *               imageUrl:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Trip updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Trip'
+ *       '400':
+ *         description: Invalid update data or no editable fields provided
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Admin access required
+ *       '404':
+ *         description: Trip not found
+ *       '500':
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete an existing trip
+ *     description: Admin only. Deletes the trip with the supplied ID.
+ *     tags:
+ *       - Trips
+ *     security:
+ *       - sessionAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Unique trip ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Trip deleted successfully
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Admin access required
+ *       '404':
+ *         description: Trip not found
+ *       '409':
+ *         description: Trip cannot be deleted because it has existing bookings
+ *       '500':
+ *         description: Internal server error
  */
 
 /**
  * @openapi
  * /api/bookings:
  *   get:
- *     summary: List all bookings
- *     description: Returns every booking stored in the database.
+ *     summary: List, search, and filter bookings with pagination
+ *     description: Returns paginated bookings with optional search and filters. Booking ID search is a case-insensitive prefix match. Ticket class and trip ID are exact matches. Administrators can view all bookings; other signed-in users can view bookings associated with their email address.
  *     tags:
  *       - Bookings
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         description: Page number (starts at 1).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         description: Number of bookings per page (maximum 50).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *       - in: query
+ *         name: q
+ *         description: Optional case-insensitive prefix search on booking ID (1–100 characters).
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 100
+ *           example: JRABC
+ *       - in: query
+ *         name: ticketClass
+ *         description: Optional exact ticket-class filter. Must match an existing ticket class.
+ *         schema:
+ *           type: string
+ *           example: premium
+ *       - in: query
+ *         name: tripId
+ *         description: Optional exact trip ID filter.
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *           example: alpine-panorama
+ *       - in: query
+ *         name: sort
+ *         description: Field used to sort the results.
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, tripId, ticketClass, scheduleId]
+ *           default: createdAt
+ *       - in: query
+ *         name: order
+ *         description: Sort direction.
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
  *     responses:
  *       200:
- *         description: A JSON array containing the list of bookings.
+ *         description: Bookings, applied search and filter parameters, and pagination metadata.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     example: JRABC12345
- *                   scheduleId:
- *                     type: number
- *                     example: 1
- *                   tripId:
- *                     type: string
- *                     example: alpine-panorama
- *                   ticketClass:
- *                     type: string
- *                     example: premium
- *                   selectedDay:
- *                     type: string
- *                     example: monday
- *                   passengers:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         firstName:
- *                           type: string
- *                         lastName:
- *                           type: string
- *                         email:
- *                           type: string
- *                         phone:
- *                           type: string
- *                   createdAt:
- *                     type: string
- *                     format: date-time
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: JRABC12345
+ *                       scheduleId:
+ *                         type: number
+ *                         example: 1
+ *                       tripId:
+ *                         type: string
+ *                         example: alpine-panorama
+ *                       ticketClass:
+ *                         type: string
+ *                         example: premium
+ *                       selectedDay:
+ *                         type: string
+ *                         example: monday
+ *                       passengers:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             firstName:
+ *                               type: string
+ *                             lastName:
+ *                               type: string
+ *                             email:
+ *                               type: string
+ *                             phone:
+ *                               type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                 query:
+ *                   type: object
+ *                   description: Search and filter parameters applied to this result.
+ *                   properties:
+ *                     q:
+ *                       type: string
+ *                       example: JRABC
+ *                     ticketClass:
+ *                       type: string
+ *                       example: premium
+ *                     tripId:
+ *                       type: string
+ *                       example: alpine-panorama
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalItems:
+ *                       type: integer
+ *                       example: 25
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPreviousPage:
+ *                       type: boolean
+ *                       example: false
+ *       400:
+ *         description: Invalid pagination, sorting, search, or filter parameters.
+ *       401:
+ *         description: Authentication required.
+ *       403:
+ *         description: Account email is required for non-admin users.
  *       500:
- *         description: Internal server error
+ *         description: Internal server error.
  */
 
 /**

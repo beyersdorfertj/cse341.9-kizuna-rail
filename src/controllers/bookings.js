@@ -1,8 +1,7 @@
 import {
-    getAllBookings as FindAllBookings,
+    getPaginatedBookings,
     createBooking,
     getBookingById,
-    getBookingsByPassengerEmail,
     updateBookingById,
     deleteBookingById
 } from '../models/bookings.js';
@@ -26,13 +25,150 @@ export const getAllBookings = async (req, res) => {
         const { role, email } = req.session.user;
         const normalizedEmail = email?.trim().toLowerCase();
 
-        const bookings = role === 'admin'
-            ? await FindAllBookings()
-            : await getBookingsByPassengerEmail(normalizedEmail);
-        
-        return res.status(200).json( bookings );
+        if (role !== 'admin' && !normalizedEmail) {
+            return res.status(403).json({ message: 'Account email is required.' });
+        }
+
+        const parseInteger = (value, defaultValue, minimum, maximum = Number.MAX_SAFE_INTEGER) => {
+            if (value === undefined) {
+                return defaultValue;
+            }
+
+            if (typeof value !== 'string' || !/^\d+$/.test(value)) {
+                return null;
+            }
+
+            const parsed = Number(value);
+
+            if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
+                return null;
+            }
+
+            return parsed;
+        };
+
+        const page = parseInteger(req.query.page, 1, 1);
+        const limit = parseInteger(req.query.limit, 10, 1, 50);
+
+        if (page === null || limit === null) {
+            return res.status(400).json({
+                message: 'Page must be a positive integer and limit must be between 1 and 50.'
+            });
+        }
+
+        const allowedSortFields = ['createdAt', 'tripId', 'ticketClass', 'scheduleId'];
+        const sort = req.query.sort === undefined ? 'createdAt' : req.query.sort;
+
+        if (typeof sort !== 'string' || !allowedSortFields.includes(sort)) {
+            return res.status(400).json({ message: 'Invalid sort field.' });
+        }
+
+        const order = req.query.order === undefined ? 'desc' : req.query.order;
+
+        if (typeof order !== 'string' || !['asc', 'desc'].includes(order)) {
+            return res.status(400).json({ message: 'Invalid sort order.' });
+        }
+
+        const query = {};
+
+        if (req.query.q !== undefined) {
+            if (
+                typeof req.query.q !== 'string' ||
+                req.query.q.trim().length < 1 ||
+                req.query.q.trim().length > 100
+            ) {
+                return res.status(400).json({
+                    message: 'Search query must be between 1 and 100 characters.'
+                });
+            }
+
+            query.q = req.query.q.trim();
+        }
+
+        if (req.query.ticketClass !== undefined) {
+            if (
+                typeof req.query.ticketClass !== 'string' ||
+                !req.query.ticketClass.trim()
+            ) {
+                return res.status(400).json({
+                    message: 'Invalid ticket class.'
+                });
+            }
+
+            const ticketClass = req.query.ticketClass.trim();
+            const db = getDb();
+            const validTicketClass = await db.collection('ticketClasses').findOne({
+                class: ticketClass
+            });
+
+            if (!validTicketClass) {
+                return res.status(400).json({
+                    message: 'Invalid ticket class.'
+                });
+            }
+
+            query.ticketClass = ticketClass;
+        }
+
+        if (req.query.tripId !== undefined) {
+            if (
+                typeof req.query.tripId !== 'string' ||
+                req.query.tripId.trim().length === 0
+            ) {
+                return res.status(400).json({
+                    message: 'Trip ID must be a non-empty string.'
+                });
+            }
+
+            query.tripId = req.query.tripId.trim();
+        }
+
+        // Status and travel-date filters are deferred until those fields
+        // are added to the booking schema.
+        // TODO: Add status allowlist validation when booking status exists.
+        // TODO: Add travelDateAfter/travelDateBefore validation when travelDate exists.
+
+        const filter = role === 'admin'
+            ? {}
+            : { 'passengers.email': normalizedEmail };
+
+        if (query.q) {
+            const escapedSearch = query.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            filter.id = { $regex: `^${escapedSearch}`, $options: 'i' };
+        }
+
+        if (query.ticketClass) {
+            filter.ticketClass = query.ticketClass;
+        }
+
+        if (query.tripId) {
+            filter.tripId = query.tripId;
+        }
+
+        const { bookings, totalItems } = await getPaginatedBookings({
+            filter,
+            page,
+            limit,
+            sort,
+            order
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return res.status(200).json({
+            data: bookings,
+            query,
+            pagination: {
+                page,
+                limit,
+                totalItems,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPreviousPage: page > 1
+            }
+        });
     } catch (error) {
-        console.error('Error fetching all bookings:', error);
+        console.error('Error fetching bookings:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
