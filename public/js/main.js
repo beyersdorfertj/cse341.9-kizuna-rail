@@ -1,40 +1,4 @@
 
-const hookRegionSorter = () => {
-    const regionSelect = document.getElementById('region-filter');
-    if (regionSelect) {
-        regionSelect.addEventListener('change', () => {
-            const selectedRegion = regionSelect.value;
-            const url = new URL(window.location.href);
-
-            if (selectedRegion && selectedRegion !== 'all') {
-                url.searchParams.set('region', selectedRegion);
-            } else {
-                url.searchParams.delete('region');
-            }
-            
-            window.location.href = url.toString();
-        });
-    }
-};
-
-const hookSeasonSorter = () => {
-    const seasonSelect = document.getElementById('season-filter');
-    if (seasonSelect) {
-        seasonSelect.addEventListener('change', () => {
-            const selectedSeason = seasonSelect.value;
-            const url = new URL(window.location.href);
-
-            if (selectedSeason && selectedSeason !== 'all') {
-                url.searchParams.set('season', selectedSeason);
-            } else {
-                url.searchParams.delete('season');
-            }
-            
-            window.location.href = url.toString();
-        });
-    }
-};
-
 const hookTrainsCatalog = async () => {
     const listEl = document.getElementById('trains-list');
     const templateEl = document.getElementById('train-card-template');
@@ -198,10 +162,22 @@ const hookTripsCatalog = async () => {
     const pageInfo = document.getElementById('page-info');
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
+    const regionSelect = document.getElementById('region-filter');
+    const seasonSelect = document.getElementById('season-filter');
+    const keywordInput = document.getElementById('keyword-search');
     if (!listEl || !templateEl) return;
 
     let currentPage = 1;
     const limit = 10;
+
+    const buildQuery = () => {
+      const params = new URLSearchParams({ page: currentPage, limit });
+      const q = keywordInput && keywordInput.value.trim();
+      if (q) params.set('q', q);
+      if (regionSelect && regionSelect.value !== 'all') params.set('region', regionSelect.value);
+      if (seasonSelect && seasonSelect.value !== 'all') params.set('bestSeason', seasonSelect.value);
+      return params.toString();
+    };
 
   const renderTrips = (trips) => {
     const fragment = document.createDocumentFragment();
@@ -252,7 +228,7 @@ const hookTripsCatalog = async () => {
 
   const loadTrips = async () => {
     try {
-      const response = await fetch(`/api/trips?page=${currentPage}&limit=${limit}`);
+      const response = await fetch(`/api/trips?${buildQuery()}`);
       if (!response.ok) throw new Error(`Failed to load trips (${response.status})`);
 
       const { data, pagination } = await response.json();
@@ -261,7 +237,7 @@ const hookTripsCatalog = async () => {
       if (loadingEl) loadingEl.hidden = true;
       if (emptyEl) emptyEl.hidden = data.length !== 0;
 
-      controls.hidden = false;
+      controls.hidden = pagination.totalPages <= 1;
       pageInfo.textContent = `Page ${pagination.page} of ${pagination.totalPages}`;
       prevPageBtn.disabled = !pagination.hasPreviousPage;
       nextPageBtn.disabled = !pagination.hasNextPage;
@@ -278,16 +254,23 @@ const hookTripsCatalog = async () => {
   prevPageBtn.addEventListener('click', () => { currentPage--; loadTrips(); });
   nextPageBtn.addEventListener('click', () => { currentPage++; loadTrips(); });
 
+  // Any filter change resets to the first page.
+  const applyFilters = () => { currentPage = 1; loadTrips(); };
+  if (regionSelect) regionSelect.addEventListener('change', applyFilters);
+  if (seasonSelect) seasonSelect.addEventListener('change', applyFilters);
+  if (keywordInput) {
+    let debounce;
+    keywordInput.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(applyFilters, 300);
+    });
+  }
+
   loadTrips();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('trips-list')) {
-        hookTripsCatalog();
-    } else {
-        hookRegionSorter();
-        hookSeasonSorter();
-    }
+    hookTripsCatalog();
     hookTrainsCatalog();
     hookTripSchedules();
 });
