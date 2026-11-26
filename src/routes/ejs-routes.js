@@ -11,7 +11,7 @@ import {
 } from '../controllers/auth.js';
 import { adminDashboardPage } from '../controllers/admin.js';
 import { tripAdminPage } from '../controllers/trips.js';
-import { requirePageRole, requirePageLogin } from '../middleware/auth.js';
+import { requirePageLogin, requirePageRole } from '../middleware/auth.js';
 import railTripsRouter from './trips.js';
 
 const router = Router();
@@ -41,6 +41,11 @@ router.post('/logout', logout);
 router.get('/admin', requirePageRole('admin'), adminDashboardPage);
 router.get('/admin/trips', requirePageRole('admin'), tripAdminPage);
 router.get('/bookings-admin', requirePageLogin, bookingsAdminPage);
+
+// User management
+router.get('/users-admin', requirePageLogin, (req, res) => {
+    res.render('users/admin', { title: 'User Management' });
+});
 
 // Test 500 error page
 router.get('/500', testErrorPage);
