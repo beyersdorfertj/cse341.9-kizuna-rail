@@ -105,6 +105,26 @@
  *        name: order
  *        schema: { type: string, enum: [asc, desc], default: "asc" }
  *        description: Sort order
+ *      - in: query
+ *        name: q
+ *        schema: { type: string, minLength: 1, maxLength: 100 }
+ *        description: Free-text search on name/description (case-insensitive)
+ *      - in: query
+ *        name: region
+ *        schema: { type: string, enum: [central, northern, kansai, hokkaido] }
+ *        description: Exact-match region filter
+ *      - in: query
+ *        name: bestSeason
+ *        schema: { type: string, enum: [spring, summer, autumn, winter] }
+ *        description: Exact-match season filter
+ *      - in: query
+ *        name: minDistance
+ *        schema: { type: number, minimum: 0 }
+ *        description: Minimum distance in km ($gte)
+ *      - in: query
+ *        name: maxDistance
+ *        schema: { type: number, minimum: 0 }
+ *        description: Maximum distance in km ($lte)
  *     responses:
  *       '200':
  *         description: Paginated list of trips
@@ -116,6 +136,9 @@
  *                 data:
  *                   type: array
  *                   items: { $ref: '#/components/schemas/Trip' }
+ *                 query:
+ *                   type: object
+ *                   description: Applied search/filter values (echoed back)
  *                 pagination:
  *                   type: object
  *                   properties:

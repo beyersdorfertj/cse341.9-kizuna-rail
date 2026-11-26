@@ -8,12 +8,15 @@ import { getDb } from "../db/connect.js";
 
 const ALLOWED_SORT = ["name", "distance", "region", "bestSeason"];
 const ALLOWED_ORDER = ["asc", "desc"];
+const ALLOWED_REGION = ["central", "northern", "kansai", "hokkaido"];
+const ALLOWED_SEASON = ["spring", "summer", "autumn", "winter"];
 
 // GET /api/trips
 export async function getAllTrips(req, res) {
   const errors = [];
 
   const { page = 1, limit = 10, sort = "name", order = "asc" } = req.query;
+  const { q, region, bestSeason, minDistance, maxDistance } = req.query;
 
   if (!Number.isInteger(Number(page)) || Number(page) < 1) {
     errors.push({ field: 'page', message: "page must be a positive integer." });
@@ -27,6 +30,21 @@ export async function getAllTrips(req, res) {
   if (!ALLOWED_ORDER.includes(order)) {
     errors.push({ field: 'order', message: "Sort order must be 'asc' or 'desc'." });
   }
+  if (q !== undefined && (typeof q !== "string" || q.trim().length < 1 || q.trim().length > 100)) {
+    errors.push({ field: 'q', message: "q must be a string between 1 and 100 characters." });
+  }
+  if (region !== undefined && !ALLOWED_REGION.includes(region)) {
+    errors.push({ field: 'region', message: `region must be one of: ${ALLOWED_REGION.join(", ")}.` });
+  }
+  if (bestSeason !== undefined && !ALLOWED_SEASON.includes(bestSeason)) {
+    errors.push({ field: 'bestSeason', message: `bestSeason must be one of: ${ALLOWED_SEASON.join(", ")}.` });
+  }
+  if (minDistance !== undefined && (isNaN(Number(minDistance)) || Number(minDistance) < 0)) {
+    errors.push({ field: 'minDistance', message: "minDistance must be a non-negative number." });
+  }
+  if (maxDistance !== undefined && (isNaN(Number(maxDistance)) || Number(maxDistance) < 0)) {
+    errors.push({ field: 'maxDistance', message: "maxDistance must be a non-negative number." });
+  }
 
   if (errors.length > 0) {
     return res.status(400).json({ errors });
@@ -35,11 +53,45 @@ export async function getAllTrips(req, res) {
   const pageNum = Number(page);
   const limitNum = Number(limit);
 
+  const filter = {};
+  const query = {};
+
+  if (q !== undefined) {
+    const text = q.trim();
+    // Escape regex metacharacters to prevent injection/invalid-pattern errors.
+    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    filter.$or = [
+      { name: { $regex: escaped, $options: "i" } },
+      { description: { $regex: escaped, $options: "i" } },
+    ];
+    query.q = text;
+  }
+  if (region !== undefined) {
+    filter.region = region;
+    query.region = region;
+  }
+  if (bestSeason !== undefined) {
+    filter.bestSeason = bestSeason;
+    query.bestSeason = bestSeason;
+  }
+  if (minDistance !== undefined || maxDistance !== undefined) {
+    filter.distance = {};
+    if (minDistance !== undefined) {
+      filter.distance.$gte = Number(minDistance);
+      query.minDistance = Number(minDistance);
+    }
+    if (maxDistance !== undefined) {
+      filter.distance.$lte = Number(maxDistance);
+      query.maxDistance = Number(maxDistance);
+    }
+  }
+
   try {
-    const { trips, totalItems } = await getPaginatedTrips({ page: pageNum, limit: limitNum, sort, order });
+    const { trips, totalItems } = await getPaginatedTrips({ filter, page: pageNum, limit: limitNum, sort, order });
     const totalPages = Math.ceil(totalItems / limitNum);
     return res.status(200).json({
       data: trips,
+      query,
       pagination: {
         page: pageNum,
         limit: limitNum,

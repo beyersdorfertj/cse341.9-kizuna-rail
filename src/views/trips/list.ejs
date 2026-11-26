@@ -4,14 +4,25 @@
 <h1><%= title %></h1>
 
 <div id="filters">
-    Search by Region:
+    <label for="keyword-search">Search:</label>
+    <input id="keyword-search" type="search" placeholder="Name or description" maxlength="100">
+
+    <label for="region-filter">Region:</label>
     <select id="region-filter">
         <option value="all">All Regions</option>
+        <option value="central">Central</option>
+        <option value="northern">Northern</option>
+        <option value="kansai">Kansai</option>
+        <option value="hokkaido">Hokkaido</option>
     </select>
 
-    Search by Season:
+    <label for="season-filter">Season:</label>
     <select id="season-filter">
         <option value="all">Any Season</option>
+        <option value="spring">Spring</option>
+        <option value="summer">Summer</option>
+        <option value="autumn">Autumn</option>
+        <option value="winter">Winter</option>
     </select>
 </div>
 
