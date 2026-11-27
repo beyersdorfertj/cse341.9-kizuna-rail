@@ -479,21 +479,137 @@
  * @openapi
  * /api/users:
  *   get:
- *     summary: List users
- *     description: Admins receive every user. Other users receive an array containing only their own account. Password hashes are never returned.
+ *     summary: List, search and filter users (paginated)
+ *     description: Admins receive a paginated list of users, optionally narrowed by a text search (q) and filters (role, createdAfter, createdBefore). Search and filters combine with pagination and sorting, and totalItems counts only matching users. No matches returns 200 with an empty data array. Text search uses a case-insensitive regex (substring match) on displayName and email, not a $text index. Other users receive only their own account in the same response shape (search and filters are ignored). Password hashes are never returned. Invalid parameters are rejected with 400 before any database call.
  *     tags:
  *       - Users
  *     security:
  *       - sessionCookie: []
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         description: Page number to return (1-based).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         description: Number of users per page.
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *       - name: sort
+ *         in: query
+ *         description: Field to sort by.
+ *         schema:
+ *           type: string
+ *           enum: [displayName, email, role, createdAt]
+ *           default: displayName
+ *       - name: order
+ *         in: query
+ *         description: Sort direction.
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
+ *       - name: q
+ *         in: query
+ *         description: Case-insensitive text search on displayName or email (substring match). Trimmed; must be 1-100 characters.
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 100
+ *           example: aiko
+ *       - name: role
+ *         in: query
+ *         description: Only return users with this role.
+ *         schema:
+ *           type: string
+ *           enum: [admin, user]
+ *       - name: createdAfter
+ *         in: query
+ *         description: Only return users created on or after this ISO 8601 date or date-time ($gte on createdAt).
+ *         schema:
+ *           type: string
+ *           example: '2026-01-01'
+ *       - name: createdBefore
+ *         in: query
+ *         description: Only return users created on or before this ISO 8601 date or date-time ($lte on createdAt). A date without a time includes that whole day (UTC).
+ *         schema:
+ *           type: string
+ *           example: '2026-06-30'
  *     responses:
  *       '200':
- *         description: An array of users.
+ *         description: A page of users with pagination metadata.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 query:
+ *                   type: object
+ *                   description: The search and filters that were applied. Only parameters that were sent appear here.
+ *                   properties:
+ *                     q:
+ *                       type: string
+ *                       example: aiko
+ *                     role:
+ *                       type: string
+ *                       example: admin
+ *                     createdAfter:
+ *                       type: string
+ *                       example: '2026-01-01'
+ *                     createdBefore:
+ *                       type: string
+ *                       example: '2026-06-30'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalItems:
+ *                       type: integer
+ *                       example: 23
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPreviousPage:
+ *                       type: boolean
+ *                       example: false
+ *       '400':
+ *         description: One or more pagination, search or filter parameters are invalid (for example role=superuser or createdAfter=notadate).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *             example:
+ *               errors:
+ *                 - field: limit
+ *                   message: limit must be an integer between 1 and 50
  *       '401':
  *         $ref: '#/components/responses/Unauthorized'
  *       '404':
