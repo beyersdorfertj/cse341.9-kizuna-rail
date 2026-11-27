@@ -7,6 +7,26 @@ const userMessage = document.getElementById('user-message');
 const currentUserId = page.dataset.currentUserId;
 const isAdmin = page.dataset.currentUserRole === 'admin';
 const ROLES = ['user', 'admin'];
+const PAGE_SIZE = 10;
+let currentPage = 1;
+
+// Pagination controls are built here so the view template does not need to change.
+const pager = document.createElement('nav');
+pager.className = 'pagination';
+pager.setAttribute('aria-label', 'User list pages');
+const prevButton = document.createElement('button');
+prevButton.type = 'button';
+prevButton.className = 'btn-primary';
+prevButton.textContent = 'Previous';
+const pageStatus = document.createElement('span');
+pageStatus.setAttribute('aria-live', 'polite');
+const nextButton = document.createElement('button');
+nextButton.type = 'button';
+nextButton.className = 'btn-primary';
+nextButton.textContent = 'Next';
+pager.append(prevButton, ' ', pageStatus, ' ', nextButton);
+pager.hidden = true;
+usersList.after(pager);
 
 const showMessage = (text, isError = false) => {
     userMessage.textContent = text;
@@ -139,8 +159,10 @@ const renderUser = (user) => {
                 return;
             }
 
-            card.remove();
             showMessage(`Deleted ${user.displayName}.`);
+            // Reload so the page refills; step back if this emptied the last page.
+            const isLastOnPage = usersList.querySelectorAll('.user-card').length === 1;
+            loadUsers(isLastOnPage && currentPage > 1 ? currentPage - 1 : currentPage);
         } catch (error) {
             console.error(error);
             showMessage('Delete failed: network error.', true);
@@ -151,27 +173,37 @@ const renderUser = (user) => {
     return card;
 };
 
-const loadUsers = async () => {
+async function loadUsers(page = 1) {
     try {
-        const response = await fetch('/api/users');
+        const params = new URLSearchParams({ page, limit: PAGE_SIZE });
+        const response = await fetch(`/api/users?${params}`);
 
         if (!response.ok) {
             showMessage(`Could not load users: ${await getErrorMessage(response)}`, true);
             return;
         }
 
-        const users = await response.json();
+        const { data: users, pagination } = await response.json();
+        currentPage = pagination.page;
         usersList.replaceChildren(...users.map(renderUser));
 
         if (users.length === 0) {
             usersList.textContent = 'No users found.';
         }
+
+        pageStatus.textContent = `Page ${pagination.page} of ${Math.max(pagination.totalPages, 1)}`;
+        prevButton.disabled = !pagination.hasPreviousPage;
+        nextButton.disabled = !pagination.hasNextPage;
+        pager.hidden = pagination.totalPages <= 1;
     } catch (error) {
         console.error(error);
         showMessage('Could not load users: network error.', true);
     } finally {
         usersLoading.hidden = true;
     }
-};
+}
+
+prevButton.addEventListener('click', () => loadUsers(currentPage - 1));
+nextButton.addEventListener('click', () => loadUsers(currentPage + 1));
 
 loadUsers();

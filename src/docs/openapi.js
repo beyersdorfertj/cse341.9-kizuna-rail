@@ -479,21 +479,95 @@
  * @openapi
  * /api/users:
  *   get:
- *     summary: List users
- *     description: Admins receive every user. Other users receive an array containing only their own account. Password hashes are never returned.
+ *     summary: List users (paginated)
+ *     description: Admins receive a paginated list of all users. Other users receive only their own account in the same response shape. Password hashes are never returned. Invalid pagination parameters are rejected with 400 before any database call.
  *     tags:
  *       - Users
  *     security:
  *       - sessionCookie: []
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         description: Page number to return (1-based).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         description: Number of users per page.
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *       - name: sort
+ *         in: query
+ *         description: Field to sort by.
+ *         schema:
+ *           type: string
+ *           enum: [displayName, email, role, createdAt]
+ *           default: displayName
+ *       - name: order
+ *         in: query
+ *         description: Sort direction.
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
  *     responses:
  *       '200':
- *         description: An array of users.
+ *         description: A page of users with pagination metadata.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalItems:
+ *                       type: integer
+ *                       example: 23
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPreviousPage:
+ *                       type: boolean
+ *                       example: false
+ *       '400':
+ *         description: One or more pagination parameters are invalid.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *             example:
+ *               errors:
+ *                 - field: limit
+ *                   message: limit must be an integer between 1 and 50
  *       '401':
  *         $ref: '#/components/responses/Unauthorized'
  *       '404':

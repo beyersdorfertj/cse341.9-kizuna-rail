@@ -17,8 +17,20 @@ export async function createUser(data) {
   return user.create(data);
 }
 
-export async function getAllUsers() {
-  return user.find({}).select('-passwordHash').lean();
+// Expects already-validated pagination values. _id is a tie-breaker so pages never overlap.
+export async function getPaginatedUsers({ page, limit, sort, order }) {
+  const direction = order === 'desc' ? -1 : 1;
+  const [users, totalItems] = await Promise.all([
+    user
+      .find({})
+      .select('-passwordHash')
+      .sort({ [sort]: direction, _id: direction })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    user.countDocuments({}),
+  ]);
+  return { users, totalItems };
 }
 
 export async function updateUserById(id, updates) {
