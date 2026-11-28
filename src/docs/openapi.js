@@ -477,3 +477,244 @@
  *                   type: string
  *                   example: Failed to fetch schedules
  */
+
+/**
+ * @openapi
+ * components:
+ *   securitySchemes:
+ *     sessionCookie:
+ *       type: apiKey
+ *       in: cookie
+ *       name: connect.sid
+ *       description: Session cookie set after logging in.
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: MongoDB ObjectId of the user.
+ *           example: 665f1c2a9b1e8a3d4c5b6a7f
+ *         displayName:
+ *           type: string
+ *           example: Hana Suzuki
+ *         username:
+ *           type: string
+ *           example: hana
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: hana@example.com
+ *         role:
+ *           type: string
+ *           example: user
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     UserUpdate:
+ *       type: object
+ *       description: At least one field is required. Only admins may change role.
+ *       minProperties: 1
+ *       properties:
+ *         displayName:
+ *           type: string
+ *           example: Hana S.
+ *         username:
+ *           type: string
+ *           example: hana_s
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: hana.s@example.com
+ *         role:
+ *           type: string
+ *           description: Admin only. Must match an existing role name.
+ *           example: admin
+ *     Error:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *   parameters:
+ *     UserId:
+ *       name: id
+ *       in: path
+ *       required: true
+ *       description: MongoDB ObjectId of the user (24 hex characters).
+ *       schema:
+ *         type: string
+ *         pattern: '^[a-fA-F0-9]{24}$'
+ *         example: 665f1c2a9b1e8a3d4c5b6a7f
+ *   responses:
+ *     Unauthorized:
+ *       description: Not logged in.
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Error'
+ *           example:
+ *             error: Authentication required
+ *     InternalError:
+ *       description: Unexpected server or database error.
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Error'
+ *           example:
+ *             error: Internal server error
+ */
+
+/**
+ * @openapi
+ * /api/users:
+ *   get:
+ *     summary: List users
+ *     description: Admins receive every user. Other users receive an array containing only their own account. Password hashes are never returned.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - sessionCookie: []
+ *     responses:
+ *       '200':
+ *         description: An array of users.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '404':
+ *         description: The logged-in user no longer exists.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: User not found
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @openapi
+ * /api/users/{id}:
+ *   put:
+ *     summary: Update a user
+ *     description: Admins can update any user. Other users can update only their own account and cannot change role. Only displayName, username, email and role are accepted.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - sessionCookie: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/UserId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserUpdate'
+ *     responses:
+ *       '200':
+ *         description: The updated user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       '400':
+ *         description: Invalid user ID, invalid field value, invalid role, or no valid fields supplied.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               invalidId:
+ *                 value:
+ *                   error: Invalid user ID
+ *               emptyField:
+ *                 value:
+ *                   error: username must be a non-empty string
+ *               invalidRole:
+ *                 value:
+ *                   error: Invalid role
+ *               noFields:
+ *                 value:
+ *                   error: No valid fields to update
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '403':
+ *         description: Not allowed to update this user, or a non-admin tried to change role.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               forbidden:
+ *                 value:
+ *                   error: Forbidden
+ *               roleChange:
+ *                 value:
+ *                   error: Only admins can change roles
+ *       '404':
+ *         description: User not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: User not found
+ *       '409':
+ *         description: Username or email already belongs to another user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: Username or email already exists
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ *   delete:
+ *     summary: Delete a user
+ *     description: Admins can delete any user. Other users can delete only their own account, which also ends their session.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - sessionCookie: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/UserId'
+ *     responses:
+ *       '204':
+ *         description: User deleted. No response body.
+ *       '400':
+ *         description: Invalid user ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: Invalid user ID
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '403':
+ *         description: Not allowed to delete this user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: Forbidden
+ *       '404':
+ *         description: User not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: User not found
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
