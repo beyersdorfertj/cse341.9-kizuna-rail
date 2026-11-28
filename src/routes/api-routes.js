@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { requireApiLogin } from '../middleware/auth.js';
 import { getAllTrains } from '../controllers/trains.js';
 import { getSchedulesForTrip } from '../controllers/schedules.js';
 import { getAllBookings, updateBooking, deleteBooking } from '../controllers/bookings.js';
-import { getAllTrips, getTripById } from '../controllers/trips.js';
+import { getAllTrips, getTripById, updateTrip, deleteTrip } from '../controllers/trips.js';
+import { requireApiRole, requireApiLogin } from '../middleware/auth.js';
 import { deleteUser, getUsers, updateUser } from '../controllers/users.js';
 
 const router = Router();
@@ -19,6 +19,8 @@ router.get('/trips/:id/schedules', getSchedulesForTrip);
 // Trips API
 router.get('/trips', getAllTrips);
 router.get('/trips/:id', getTripById);
+router.put('/trips/:id', requireApiRole('admin'), updateTrip);
+router.delete('/trips/:id', requireApiRole('admin'), deleteTrip);
 
 // Feature Set 3: Bookings
 router.get('/bookings', requireApiLogin, getAllBookings);

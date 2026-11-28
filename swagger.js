@@ -8,6 +8,16 @@ const options = {
             title: 'Kizuna Rail API',
             version: pkg.version,
             description: 'REST API for the Kizuna Rail demo application.'
+        },
+        components: {
+            securitySchemes: {
+                sessionAuth: {
+                    type: 'apiKey',
+                    in: 'cookie',
+                    name: 'connect.sid',
+                    description: 'Express session cookie. Log in through the application first.'
+                }
+            }
         }
     },
     // Central OpenAPI documentation, separate from the route implementations.

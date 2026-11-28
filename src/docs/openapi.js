@@ -134,6 +134,98 @@
  *                   example: Trip not found
  *       '500':
  *         description: Internal server error
+ *   put:
+ *     summary: Update an existing trip
+ *     description: Admin only. Updates editable fields of an existing trip.
+ *     tags:
+ *       - Trips
+ *     security:
+ *       - sessionAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Unique trip ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               region:
+ *                 type: string
+ *               startStation:
+ *                 type: string
+ *               endStation:
+ *                 type: string
+ *               duration:
+ *                 type: string
+ *               distance:
+ *                 type: number
+ *                 minimum: 0
+ *               highlights:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               bestSeason:
+ *                 type: string
+ *               operatingMonths:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *               imageUrl:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Trip updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Trip'
+ *       '400':
+ *         description: Invalid update data or no editable fields provided
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Admin access required
+ *       '404':
+ *         description: Trip not found
+ *       '500':
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete an existing trip
+ *     description: Admin only. Deletes the trip with the supplied ID.
+ *     tags:
+ *       - Trips
+ *     security:
+ *       - sessionAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Unique trip ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Trip deleted successfully
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Admin access required
+ *       '404':
+ *         description: Trip not found
+ *       '409':
+ *         description: Trip cannot be deleted because it has existing bookings
+ *       '500':
+ *         description: Internal server error
  */
 
 /**

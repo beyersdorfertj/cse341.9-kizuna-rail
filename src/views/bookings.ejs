@@ -30,18 +30,18 @@
         <div class="bookings-state" id="bookings-loading">
             Loading bookings...
         </div>
-    
+
         <div class="bookings-state bookings-error" id="bookings-error" hidden></div>
-    
+
         <div class="bookings-grid" id="bookings-list"></div>
-    
+
         <template id="booking-card-template">
             <article class="booking-card" data-booking-id="">
                 <header class="booking-card-header">
                     <h3 data-field="id"></h3>
                     <span data-field="ticketClass"></span>
                 </header>
-        
+
                 <div class="booking-details">
                     <p>Trip ID: <span data-field="tripId"></span></p>
                     <p>Schedule ID: <span data-field="scheduleId"></span></p>
@@ -49,12 +49,12 @@
                     <p>Passengers: <span data-field="passengerCount"></span></p>
                     <p>Created: <span data-field="createdAt"></span></p>
                 </div>
-        
+
                 <button type="button" data-action="edit">Edit</button>
                 <button type="button" data-action="delete">Delete</button>
             </article>
         </template>
-        
+
         <template id="booking-edit-template">
             <header class="booking-edit-header">
                 <h2 data-field="edit-title"></h2>
@@ -64,17 +64,17 @@
                     Ticket class
                     <input name="ticketClass" required>
                 </label>
-        
+
                 <label>
                     Travel day
                     <input name="selectedDay" required>
                 </label>
-        
+
                 <button type="submit">Save</button>
                 <button type="button" data-action="cancel">Cancel</button>
             </form>
         </template>
-        
+
         <p id="bookings-message" role="status"></p>
     </section>
 
